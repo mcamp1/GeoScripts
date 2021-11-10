@@ -318,6 +318,9 @@ class CreatePGGeodatabase(object):
 
         arcpy.SetProgressorLabel("Setting Datasets As Versioned..")
 
+        # Store the current workspace
+        currentWorskpace = arcpy.env.workspace
+
         # Set enterprise gdb as the workspace
         arcpy.env.workspace = updatedGdbWorkspace.getOutput(0)
 
@@ -337,6 +340,9 @@ class CreatePGGeodatabase(object):
         for version in versions:
             arcpy.SetProgressorLabel("Creating {0} version..".format(version))
             arcpy.CreateVersion_management(arcpy.env.workspace, "sde.DEFAULT", version, "PUBLIC")
+
+        # Reset the workspace
+        arcpy.env.workspace = currentWorskpace
 
         arcpy.ResetProgressor()
 
@@ -561,8 +567,29 @@ class ImportGeodatabase(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
+        sde = parameters[0].valueAsText
+        version = parameters[1].valueAsText
 
+        aprx = arcpy.mp.ArcGISProject("CURRENT")
 
+        aprx.defaultGeodatabase = sde
+        
+        firstMap = aprx.listMaps("Map")[0]
 
+        arcpy.env.workspace = sde
+
+        featureClasses = arcpy.ListFeatureClasses(feature_dataset="GeologicMap")
+
+        for feature in featureClasses:
+            lyrFile = arcpy.mp.LayerFile(feature)
+            m.addLayer(lyrFile, "TOP")
+            #arcpy.AddMessage(feature)
+            #arcpy.MakeFeatureLayer_management(feature, "test")
+
+        #for feature in arcpy.ListFeatureClasses(feature_dataset="GeologicMap")
+            #arcpy.MakeFeatureLayer_management(feature, feature)
+
+        # "C:\GeoScripts\Output\database51_geomapmaker.sde"
 
         return
+        
