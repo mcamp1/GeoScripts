@@ -10,7 +10,7 @@ testing = True
 
 # CreateXmlWorkspace testing paths
 usgsGdbvalue = r'C:\GeoScripts\Input\usgsGems.gdb'
-symbologyCsvvalue = r''
+symbologyCsvvalue = r'C:\GeoScripts\Input\cfsymbology.csv'
 outPathXmlvalue = r'C:\GeoScripts\Output\Template.xml'
 
 # CreatePGGeodatabase testing paths
@@ -123,21 +123,7 @@ class CreateXmlWorkspace(object):
 
         arcpy.SetProgressorLabel("Creating cfsymbology table.")
 
-        #arcpy.CreateTable_management(tmpGDB, "cfsymbology")
-
-        #arcpy.AddField_management("cfsymbology", "key", "TEXT")
-        #arcpy.AddField_management("cfsymbology", "description", "TEXT")
-        #arcpy.AddField_management("cfsymbology", "symbol", "TEXT", field_length=500)
-
-        #cursor = arcpy.da.InsertCursor('cfsymbology', ['key', 'description', 'symbol'])
-
-        # cursor.insertRow([ '1.1.1', 'Contact—Identity and existence certain, location accurate', '{"type":"CIMLineSymbol","symbolLayers":[{"type":"CIMSolidStroke","enable":true,"colorLocked":true,"primitiveName":"1.0","capStyle":"Butt","joinStyle":"Round","lineStyle3D":"Strip","miterLimit":10,"width":0.43086614173228349,"color":{"type":"CIMCMYKColor","values":[0,0,0,100,100]}}]}' ])
-
-        # arcpy.MakeTableView_management(r'C:\Users\mcamp\Desktop\CfSymbology.csv', "CfSymbologyTableView")
-
-        # arcpy.TableToTable_conversion("CfSymbologyTableView", tmpGDB, "cfsymbology")
-
-        #arcpy.da.SearchCursor()
+        arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "cfsymbology")
 
         # Export XML workspace  
         arcpy.SetProgressorLabel("Exporting geodatabase contents.")
