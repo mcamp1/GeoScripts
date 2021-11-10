@@ -1,13 +1,27 @@
 # -*- coding: utf-8 -*-
 
 import arcpy
+import random
 from arcpy.arcobjects.arcobjects import Value
 from arcpy.management import ImportXMLWorkspaceDocument
 
 # Prepopulate parameters for easy testing
 testing = True
 
+# CreateXmlWorkspace testing paths
+usgsGdbvalue = r'C:\GeoScripts\Input\usgsGems.gdb'
+symbologyCsvvalue = r''
+outPathXmlvalue = r'C:\GeoScripts\Output\Template.xml'
 
+# CreatePGGeodatabase testing paths
+authFilevalue = r"C:\GeoScripts\Input\keycodes"
+importXMLvalue = r"C:\GeoScripts\Input\GEMS_IMPORT.xml"
+
+# CreateSQLGeodatabase testing paths
+authFileSQLvalue = r"C:\GeoScripts\Input\keycodes"
+importXMLSQLvalue =  r"C:\GeoScripts\Input\GEMS_IMPORT.xml"
+
+# ImportGeodatabase
 
 class Toolbox(object):
     def __init__(self):
@@ -30,16 +44,16 @@ class CreateXmlWorkspace(object):
         """Define parameter definitions"""
 
         # USGS GeMS Geodatabase
-        in_data = arcpy.Parameter(
+        usgsGdb = arcpy.Parameter(
             displayName="USGS GeMS Geodatabase",
-            name="in_data",
+            name="usgsGdb",
             datatype="DEWorkspace",
             parameterType="Required",
             direction="Input",
         )
  
         # CF Symbology CSV
-        in_cfcsv = arcpy.Parameter(
+        symbologyCsv = arcpy.Parameter(
             displayName="CF Symbology CSV",
             name="in_cfcsv",
             datatype="DEFile",
@@ -48,23 +62,23 @@ class CreateXmlWorkspace(object):
         )
 
         # Output XML workspace document
-        out_file = arcpy.Parameter(
+        outPathXml = arcpy.Parameter(
             displayName="XML Export Location",
-            name="out_file",
+            name="outPathXml",
             datatype="DEFile",
             parameterType="Required",
             direction="Output",
         )
 
-        in_cfcsv.filter.list = ['csv']
-        out_file.filter.list = ['xml']
+        symbologyCsv.filter.list = ['csv']
+        outPathXml.filter.list = ['xml']
 
         if (testing):
-            in_data.value = r'C:\Users\mcamp\\Desktop\ABCD\TemplateGDB.gdb'
-            in_cfcsv.value = r''
-            out_file.value = r'C:\Users\mcamp\Desktop\ABCD\test.xml'
+            usgsGdb.value = usgsGdbvalue 
+            symbologyCsv.value = symbologyCsvvalue
+            outPathXml.value = outPathXmlvalue
 
-        params = [in_data, in_cfcsv, out_file]
+        params = [usgsGdb, symbologyCsv, outPathXml]
 
         return params
 
@@ -86,6 +100,10 @@ class CreateXmlWorkspace(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
 
+        usgsGdb = parameters[0].valueAsText
+        symbologyCsv = parameters[1].valueAsText
+        outPathXml = parameters[2].valueAsText
+
         arcpy.SetProgressor("default")
 
         # Get the current project
@@ -97,7 +115,7 @@ class CreateXmlWorkspace(object):
         arcpy.SetProgressorLabel("Making a temporary copy of the geodatabase.")
 
         # Make a temp copy of the USGS gdb
-        arcpy.Copy_management(parameters[0].valueAsText, tmpGDB)
+        arcpy.Copy_management(usgsGdb, tmpGDB)
 
         arcpy.env.workspace = tmpGDB
 
@@ -124,7 +142,7 @@ class CreateXmlWorkspace(object):
         # Export XML workspace  
         arcpy.SetProgressorLabel("Exporting geodatabase contents.")
 
-        arcpy.ExportXMLWorkspaceDocument_management(tmpGDB, parameters[1].valueAsText )
+        arcpy.ExportXMLWorkspaceDocument_management(tmpGDB, outPathXml )
 
         arcpy.SetProgressorLabel("Removing temporary geodatabase.")
 
@@ -217,13 +235,13 @@ class CreatePGGeodatabase(object):
         )
 
         if (testing):
-            instance.value = "127.0.0.1"
-            database.value = "database1"
+            instance.value = "127.0.0.1" 
+            database.value = "database{}".format(random.randint(0,999))
             dbAdmin.value = "postgres"
-            dbAdminPwd.value = "password"
-            gdbadminpwd.value = "password"
-            authFile.value = r"C:\geomapmaker-stuff\keycodes"
-            importXML.value = r"C:\geomapmaker-stuff\GEMS_IMPORT.xml"
+            dbAdminPwd.value =  "password"
+            gdbadminpwd.value =  "password"
+            authFile.value = authFilevalue
+            importXML.value = importXMLvalue
             versions.values = ["MC", "LB", "AZ"]
 
         params = [instance, database, dbAdmin,
@@ -249,6 +267,15 @@ class CreatePGGeodatabase(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
 
+        instance = parameters[0].valueAsText
+        database = parameters[1].valueAsText
+        dbAdmin = parameters[2].valueAsText
+        dbAdminPwd = parameters[3].valueAsText
+        gdbadminpwd = parameters[4].valueAsText
+        authFile = parameters[5].valueAsText
+        importXML = parameters[6].valueAsText
+        versions = parameters[7].values
+
         arcpy.SetProgressor("default")
 
         # Get the current project
@@ -259,14 +286,14 @@ class CreatePGGeodatabase(object):
 
         # Create Enterprise Geodatabase
         createGDB_result = arcpy.CreateEnterpriseGeodatabase_management(database_platform="POSTGRESQL",
-                                                                        instance_name=parameters[0].valueAsText,
-                                                                        database_name=parameters[1].valueAsText,
+                                                                        instance_name=instance,
+                                                                        database_name=database,
                                                                         account_authentication="DATABASE_AUTH",
-                                                                        database_admin=parameters[2].valueAsText,
-                                                                        database_admin_password=parameters[3].valueAsText,
+                                                                        database_admin=dbAdmin,
+                                                                        database_admin_password=dbAdminPwd,
                                                                         gdb_admin_name="sde",
-                                                                        gdb_admin_password=parameters[4].valueAsText,
-                                                                        authorization_file=parameters[5].valueAsText
+                                                                        gdb_admin_password=gdbadminpwd,
+                                                                        authorization_file=authFile
                                                                         )
 
         # Stop execution if CreateEnterpriseGeodatabase fails
@@ -278,21 +305,21 @@ class CreatePGGeodatabase(object):
 
         # Create Database Connection
         gdbWorkspace = arcpy.CreateDatabaseConnection_management(out_folder_path=aprx.homeFolder,
-                                                  out_name=parameters[1].valueAsText + "_geomapmaker.sde",
+                                                  out_name=database + "_geomapmaker.sde",
                                                   database_platform="POSTGRESQL",
-                                                  instance=parameters[0].valueAsText,
+                                                  instance=instance,
                                                   account_authentication="DATABASE_AUTH",
                                                   username="sde",
-                                                  password=parameters[4].valueAsText,
+                                                  password=gdbadminpwd,
                                                   save_user_pass="SAVE_USERNAME",
-                                                  database=parameters[1].valueAsText,
+                                                  database=database,
                                                   )
 
         arcpy.SetProgressorLabel("Importing XML Workspace Document..")
 
         # Import XML Workspace Document
         updatedGdbWorkspace = arcpy.ImportXMLWorkspaceDocument_management(target_geodatabase=gdbWorkspace, 
-                                            in_file=parameters[6].valueAsText, 
+                                            in_file=importXML, 
                                             )                                    
 
         arcpy.SetProgressorLabel("Setting Datasets As Versioned..")
@@ -313,17 +340,13 @@ class CreatePGGeodatabase(object):
         arcpy.SetProgressor("Creating Versions..")
 
         # Create versions
-        for version in parameters[7].values:
+        for version in versions:
             arcpy.SetProgressorLabel("Creating {0} version..".format(version))
             arcpy.CreateVersion_management(arcpy.env.workspace, "sde.DEFAULT", version, "PUBLIC")
 
         arcpy.ResetProgressor()
 
         return
-
-
-
-
 
 class CreateSQLGeodatabase(object):
     def __init__(self):
@@ -335,7 +358,7 @@ class CreateSQLGeodatabase(object):
     def getParameterInfo(self):
 
         # Instance
-        instance = arcpy.Parameter(
+        instanceSQL = arcpy.Parameter(
             displayName="Instance",
             name="instance",
             datatype="GPString",
@@ -344,7 +367,7 @@ class CreateSQLGeodatabase(object):
         )
 
         # Geodatabase Name
-        database = arcpy.Parameter(
+        databaseSQL = arcpy.Parameter(
             displayName="Geodatabase Name",
             name="database",
             datatype="GPString",
@@ -353,7 +376,7 @@ class CreateSQLGeodatabase(object):
         )
 
         # Authorization File
-        authFile = arcpy.Parameter(
+        authFileSQL = arcpy.Parameter(
             displayName="Authorization File",
             name="authFile",
             datatype="DEFile",
@@ -362,7 +385,7 @@ class CreateSQLGeodatabase(object):
         )
 
         # Import XML Workspace
-        importXML = arcpy.Parameter(
+        importXMLSQL = arcpy.Parameter(
             displayName="Import XML Workspace",
             name="importXML",
             datatype="DEFile",
@@ -371,7 +394,7 @@ class CreateSQLGeodatabase(object):
         )
 
         # List of Versions
-        versions = arcpy.Parameter(
+        versionsSQL = arcpy.Parameter(
             displayName="Versions",
             name="versions",
             datatype="string",
@@ -381,13 +404,13 @@ class CreateSQLGeodatabase(object):
         )
 
         if (testing):
-            instance.value = "MCAMP-DT\SQLEXPRESS"
-            database.value = "database1"
-            authFile.value = r"C:\geomapmaker-stuff\keycodes"
-            importXML.value = r"C:\geomapmaker-stuff\GEMS_IMPORT.xml"
-            versions.values = ["MC", "LB", "AZ"]
+            instanceSQL.value = "MCAMP-DT\SQLEXPRESS"
+            databaseSQL.value = "database{}".format(random.randint(0,999))
+            authFileSQL.value = authFileSQLvalue 
+            importXMLSQL.value = importXMLSQLvalue 
+            versionsSQL.values = ["MC", "LB", "AZ"]
 
-        params = [instance, database, authFile, importXML, versions]
+        params = [instanceSQL, databaseSQL, authFileSQL, importXMLSQL, versionsSQL]
 
         return params
 
@@ -413,7 +436,7 @@ class CreateSQLGeodatabase(object):
         database = parameters[1].valueAsText
         authFile = parameters[2].valueAsText
         importXML = parameters[3].valueAsText
-        versions = parameters[4].valueAsText
+        versions = parameters[4].values
 
         arcpy.SetProgressor("default")
 
