@@ -469,7 +469,8 @@ class CreateSQLGeodatabase(object):
                                                   database_platform="SQL_SERVER",
                                                   instance=instance,
                                                   account_authentication="OPERATING_SYSTEM_AUTH",
-                                                  username="",password="",
+                                                  username="",
+                                                  password="",
                                                   database=database,
                                                   )
 
@@ -515,7 +516,29 @@ class ImportGeodatabase(object):
 
     def getParameterInfo(self):
         """Define parameter definitions"""
-        params = None
+
+        # SDE File
+        sde = arcpy.Parameter(
+            displayName="SDE File",
+            name="sde",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input",
+        )
+
+        version = arcpy.Parameter(
+            displayName="Version",
+            name="version",
+            datatype="String",
+            parameterType="Required",
+            direction="Input",
+        )
+
+        version.filter.type = "ValueList"
+        #version.filter.list = ["MC", "LB"]
+
+        params = [sde, version]
+
         return params
 
     def isLicensed(self):
@@ -523,6 +546,9 @@ class ImportGeodatabase(object):
         return True
 
     def updateParameters(self, parameters):
+
+        parameters[1].filter.list = arcpy.ListVersions(parameters[0].valueAsText)
+
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
@@ -535,4 +561,8 @@ class ImportGeodatabase(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
+
+
+
+
         return
