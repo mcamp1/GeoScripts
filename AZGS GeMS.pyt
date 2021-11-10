@@ -8,18 +8,15 @@ from arcpy.management import ImportXMLWorkspaceDocument
 # Prepopulate parameters for easy testing
 testing = True
 
-# CreateXmlWorkspace testing paths
+# CreateXmlWorkspace test paths
 usgsGdbvalue = r'C:\GeoScripts\Input\usgsGems.gdb'
 symbologyCsvvalue = r'C:\GeoScripts\Input\cfsymbology.csv'
 outPathXmlvalue = r'C:\GeoScripts\Output\Template.xml'
 
-# CreatePGGeodatabase testing paths
+# Create Geodatabase test paths
 authFilevalue = r"C:\GeoScripts\Input\keycodes"
 importXMLvalue = r"C:\GeoScripts\Input\GEMS_IMPORT.xml"
-
-# CreateSQLGeodatabase testing paths
-authFileSQLvalue = r"C:\GeoScripts\Input\keycodes"
-importXMLSQLvalue =  r"C:\GeoScripts\Input\GEMS_IMPORT.xml"
+sdeOutputPathvalue = r"C:\GeoScripts\Output\\"
 
 # ImportGeodatabase
 
@@ -210,6 +207,15 @@ class CreatePGGeodatabase(object):
             direction="Input",
         )
 
+        # SDE Output Path
+        sdeOutputPath = arcpy.Parameter(
+            displayName="SDE Output Path",
+            name="sdeOutputPath",
+            datatype="DEFolder",
+            parameterType="Required",
+            direction="Input",
+        )
+
         # List of Versions
         versions = arcpy.Parameter(
             displayName="Versions",
@@ -228,10 +234,11 @@ class CreatePGGeodatabase(object):
             gdbadminpwd.value =  "password"
             authFile.value = authFilevalue
             importXML.value = importXMLvalue
+            sdeOutputPath.value = sdeOutputPathvalue
             versions.values = ["MC", "LB", "AZ"]
 
         params = [instance, database, dbAdmin,
-                  dbAdminPwd, gdbadminpwd, authFile, importXML, versions]
+                  dbAdminPwd, gdbadminpwd, authFile, importXML, sdeOutputPath, versions]
 
         return params
 
@@ -260,7 +267,8 @@ class CreatePGGeodatabase(object):
         gdbadminpwd = parameters[4].valueAsText
         authFile = parameters[5].valueAsText
         importXML = parameters[6].valueAsText
-        versions = parameters[7].values
+        sdeOutputPath = parameters[7].valueAsText
+        versions = parameters[8].values
 
         arcpy.SetProgressor("default")
 
@@ -290,7 +298,7 @@ class CreatePGGeodatabase(object):
         arcpy.SetProgressorLabel("Creating Database Connection..")
 
         # Create Database Connection
-        gdbWorkspace = arcpy.CreateDatabaseConnection_management(out_folder_path=aprx.homeFolder,
+        gdbWorkspace = arcpy.CreateDatabaseConnection_management(out_folder_path=sdeOutputPath,
                                                   out_name=database + "_geomapmaker.sde",
                                                   database_platform="POSTGRESQL",
                                                   instance=instance,
@@ -344,7 +352,7 @@ class CreateSQLGeodatabase(object):
     def getParameterInfo(self):
 
         # Instance
-        instanceSQL = arcpy.Parameter(
+        instance = arcpy.Parameter(
             displayName="Instance",
             name="instance",
             datatype="GPString",
@@ -353,7 +361,7 @@ class CreateSQLGeodatabase(object):
         )
 
         # Geodatabase Name
-        databaseSQL = arcpy.Parameter(
+        database = arcpy.Parameter(
             displayName="Geodatabase Name",
             name="database",
             datatype="GPString",
@@ -362,7 +370,7 @@ class CreateSQLGeodatabase(object):
         )
 
         # Authorization File
-        authFileSQL = arcpy.Parameter(
+        authFile = arcpy.Parameter(
             displayName="Authorization File",
             name="authFile",
             datatype="DEFile",
@@ -371,7 +379,7 @@ class CreateSQLGeodatabase(object):
         )
 
         # Import XML Workspace
-        importXMLSQL = arcpy.Parameter(
+        importXML = arcpy.Parameter(
             displayName="Import XML Workspace",
             name="importXML",
             datatype="DEFile",
@@ -379,8 +387,17 @@ class CreateSQLGeodatabase(object):
             direction="Input",
         )
 
+        # SDE Output Path
+        sdeOutputPath = arcpy.Parameter(
+            displayName="SDE Output Path",
+            name="sdeOutputPath",
+            datatype="DEFolder",
+            parameterType="Required",
+            direction="Input",
+        )
+
         # List of Versions
-        versionsSQL = arcpy.Parameter(
+        versions = arcpy.Parameter(
             displayName="Versions",
             name="versions",
             datatype="string",
@@ -390,13 +407,14 @@ class CreateSQLGeodatabase(object):
         )
 
         if (testing):
-            instanceSQL.value = "MCAMP-DT\SQLEXPRESS"
-            databaseSQL.value = "database{}".format(random.randint(0,999))
-            authFileSQL.value = authFileSQLvalue 
-            importXMLSQL.value = importXMLSQLvalue 
-            versionsSQL.values = ["MC", "LB", "AZ"]
+            instance.value = "MCAMP-DT\SQLEXPRESS"
+            database.value = "database{}".format(random.randint(0,999))
+            authFile.value = authFilevalue 
+            importXML.value = importXMLvalue 
+            sdeOutputPath.value = sdeOutputPathvalue
+            versions.values = ["MC", "LB", "AZ"]
 
-        params = [instanceSQL, databaseSQL, authFileSQL, importXMLSQL, versionsSQL]
+        params = [instance, database, authFile, importXML, sdeOutputPath, versions]
 
         return params
 
@@ -422,7 +440,8 @@ class CreateSQLGeodatabase(object):
         database = parameters[1].valueAsText
         authFile = parameters[2].valueAsText
         importXML = parameters[3].valueAsText
-        versions = parameters[4].values
+        sdeOutputPath = parameters[4].valueAsText
+        versions = parameters[5].values
 
         arcpy.SetProgressor("default")
 
@@ -445,7 +464,7 @@ class CreateSQLGeodatabase(object):
         arcpy.SetProgressorLabel("Creating Database Connection..")
 
         # Create Database Connection
-        gdbWorkspace = arcpy.CreateDatabaseConnection_management(aprx.homeFolder,
+        gdbWorkspace = arcpy.CreateDatabaseConnection_management(sdeOutputPath,
                                                   database + "_geomapmaker.sde",
                                                   database_platform="SQL_SERVER",
                                                   instance=instance,
