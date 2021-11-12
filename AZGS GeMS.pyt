@@ -309,6 +309,7 @@ class CreatePGGeodatabase(object):
 
         # Stop execution if CreateEnterpriseGeodatabase fails
         if createGDB_result == False:
+            arcpy.ResetProgressor()
             arcpy.AddError("Enterprise Geodatabase Creation Failed")
             return
 
@@ -481,6 +482,7 @@ class CreateSQLGeodatabase(object):
                                                               
         # Stop execution if CreateEnterpriseGeodatabase fails
         if createGDB_result == False:
+            arcpy.ResetProgressor()
             arcpy.AddError("Enterprise Geodatabase Creation Failed")
             return
 
@@ -595,13 +597,57 @@ class ImportGeodatabase(object):
         sde = parameters[0].valueAsText
         version = parameters[1].valueAsText
 
+        arcpy.SetProgressor("default")
+
+        # Get the current project
         aprx = arcpy.mp.ArcGISProject("CURRENT")
-
-        aprx.defaultGeodatabase = sde
         
-        map = aprx.activeMap
+        # Get the current active map
+        activeMap = aprx.activeMap
 
-        if not map:
+        # Check if there was an active map
+        if not activeMap:
+            arcpy.ResetProgressor()
             arcpy.AddError("No active map.")
+            return
+
+        arcpy.SetProgressorLabel("Removing layers from map..")
+
+        # Remove all non-basemap layers 
+        for layer in activeMap.listLayers():
+            if not layer.isBasemapLayer: 
+                activeMap.removeLayer(layer)
+
+        arcpy.SetProgressorLabel("Removing tables from map..")
+
+        # Remove all tables
+        for table in activeMap.listTables():
+            activeMap.removeTable(table)
+
+        arcpy.env.workspace = sde
+
+        arcpy.SetProgressorLabel("Adding features to map..")
+
+        # Add feature classes to map
+        for dataset in arcpy.ListDatasets():
+            for feature in arcpy.ListFeatureClasses(feature_dataset=dataset):
+                activeMap.addDataFromPath("{}\\{}\\{}".format(sde, dataset, feature))
+
+        arcpy.SetProgressor("Adding tables to map..")
+
+        # Add tables to map
+        for table in arcpy.ListTables():
+            activeMap.addDataFromPath("{}\\{}".format(sde, table))
+        
+        arcpy.SetProgressorLabel("Setting versions as {}..".format(version))
+
+        # This feels a little hacky, but theres a when calling the Change Version ArcPy tool
+        # https://support.esri.com/en/bugs/nimbus/QlVHLTAwMDExNDAxNw==
+
+        find_dict = {'connection_info': {'version': 'sde.DEFAULT'}}
+        replace_dict = {'connection_info': {'version': version}}
+        aprx.updateConnectionProperties(find_dict, replace_dict)
+
+        arcpy.ResetProgressor()
 
         return
