@@ -129,7 +129,7 @@ class CreateXmlWorkspace(object):
 
         arcpy.env.workspace = tmpGDB
 
-        ### Make updates to the temp gdb
+        # Make updates to the temp gdb
 
         arcpy.SetProgressorLabel("Creating cfsymbology table.")
 
@@ -146,7 +146,7 @@ class CreateXmlWorkspace(object):
 
         arcpy.SetProgressorLabel("Removing temporary geodatabase.")
 
-        #arcpy.Delete_management(tmpGDB)
+        arcpy.Delete_management(tmpGDB)
 
         arcpy.ResetProgressor()
 
@@ -570,7 +570,14 @@ class ImportGeodatabase(object):
 
     def updateParameters(self, parameters):
 
-        parameters[1].filter.list = arcpy.ListVersions(parameters[0].valueAsText)
+        sde = parameters[0].valueAsText
+
+        if sde:
+            # SDE's ListVersions() as options
+            parameters[1].filter.list = arcpy.ListVersions(sde)
+        else:
+            # Empty options
+            parameters[1].filter.list = []
 
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
@@ -584,6 +591,7 @@ class ImportGeodatabase(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
+
         sde = parameters[0].valueAsText
         version = parameters[1].valueAsText
 
@@ -591,22 +599,9 @@ class ImportGeodatabase(object):
 
         aprx.defaultGeodatabase = sde
         
-        firstMap = aprx.listMaps("Map")[0]
+        map = aprx.activeMap
 
-        arcpy.env.workspace = sde
-
-        featureClasses = arcpy.ListFeatureClasses(feature_dataset="GeologicMap")
-
-        for feature in featureClasses:
-            lyrFile = arcpy.mp.LayerFile(feature)
-            m.addLayer(lyrFile, "TOP")
-            #arcpy.AddMessage(feature)
-            #arcpy.MakeFeatureLayer_management(feature, "test")
-
-        #for feature in arcpy.ListFeatureClasses(feature_dataset="GeologicMap")
-            #arcpy.MakeFeatureLayer_management(feature, feature)
-
-        # "C:\GeoScripts\Output\database51_geomapmaker.sde"
+        if not map:
+            arcpy.AddError("No active map.")
 
         return
-        
