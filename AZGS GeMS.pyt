@@ -11,6 +11,7 @@ testing = True
 # CreateXmlWorkspace test paths
 usgsGdbvalue = r'C:\GeoScripts\Input\usgsGems.gdb'
 symbologyCsvvalue = r'C:\GeoScripts\Input\cfsymbology.csv'
+attRulesCsvvalue = r'C:\GeoScripts\Input\attributeRules.csv'
 outPathXmlvalue = r'C:\GeoScripts\Output\Template.xml'
 
 # Create Geodatabase test paths
@@ -52,7 +53,16 @@ class CreateXmlWorkspace(object):
         # CF Symbology CSV
         symbologyCsv = arcpy.Parameter(
             displayName="CF Symbology CSV",
-            name="in_cfcsv",
+            name="symbologyCsv",
+            datatype="DEFile",
+            parameterType="Optional",
+            direction="Input",
+        )
+
+        # DMU Attribute Rules
+        dmuAttributeRules = arcpy.Parameter(
+            displayName="DMU Attribute Rules",
+            name="dmuAttributeRules",
             datatype="DEFile",
             parameterType="Optional",
             direction="Input",
@@ -68,14 +78,16 @@ class CreateXmlWorkspace(object):
         )
 
         symbologyCsv.filter.list = ['csv']
+        dmuAttributeRules.filter.list = ['csv']
         outPathXml.filter.list = ['xml']
 
         if (testing):
             usgsGdb.value = usgsGdbvalue 
             symbologyCsv.value = symbologyCsvvalue
+            dmuAttributeRules.value = attRulesCsvvalue
             outPathXml.value = outPathXmlvalue
 
-        params = [usgsGdb, symbologyCsv, outPathXml]
+        params = [usgsGdb, symbologyCsv, dmuAttributeRules, outPathXml]
 
         return params
 
@@ -99,7 +111,8 @@ class CreateXmlWorkspace(object):
 
         usgsGdb = parameters[0].valueAsText
         symbologyCsv = parameters[1].valueAsText
-        outPathXml = parameters[2].valueAsText
+        dmuAttributeRules = parameters[2].valueAsText
+        outPathXml = parameters[3].valueAsText
 
         arcpy.SetProgressor("default")
 
@@ -121,6 +134,10 @@ class CreateXmlWorkspace(object):
         arcpy.SetProgressorLabel("Creating cfsymbology table.")
 
         arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "cfsymbology")
+
+        arcpy.SetProgressorLabel("Importing DMU Attribute Rules.")
+
+        arcpy.ImportAttributeRules_management("DescriptionOfMapUnits", dmuAttributeRules)
 
         # Export XML workspace  
         arcpy.SetProgressorLabel("Exporting geodatabase contents.")
