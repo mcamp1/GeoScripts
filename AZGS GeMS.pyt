@@ -641,11 +641,17 @@ class ImportGeodatabase(object):
         
         arcpy.SetProgressorLabel("Setting versions as {}..".format(version))
 
-        # This feels a little hacky, but theres a when calling the Change Version ArcPy tool
+        # This feels a little hacky and heavy-handed,
+        # but theres a when calling Change Version with the ArcPy tool
         # https://support.esri.com/en/bugs/nimbus/QlVHLTAwMDExNDAxNw==
 
-        find_dict = {'connection_info': {'version': 'sde.DEFAULT'}}
+        # Find the current version
+        oldVersion = arcpy.Describe(sde).connectionProperties.version
+        
+        find_dict = {'connection_info': {'version': oldVersion}}
         replace_dict = {'connection_info': {'version': version}}
+
+        # Update version
         aprx.updateConnectionProperties(find_dict, replace_dict)
 
         arcpy.ResetProgressor()
