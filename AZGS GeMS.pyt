@@ -15,9 +15,12 @@ attRulesCsvvalue = r'C:\GeoScripts\Input\attributeRules.csv'
 outPathXmlvalue = r'C:\GeoScripts\Output\Template.xml'
 
 # Create Geodatabase test paths
+instance = '127.0.0.1'
 authFilevalue = r"C:\GeoScripts\Input\keycodes"
 importXMLvalue = r"C:\GeoScripts\Input\GEMS_IMPORT.xml"
 sdeOutputPathvalue = r"C:\GeoScripts\Output\\"
+versions = ['LB', 'AZ', 'MC']
+
 
 # ImportGeodatabase
 
@@ -29,12 +32,12 @@ class Toolbox(object):
         self.alias = "toolbox"
 
         # List of tool classes associated with this toolbox
-        self.tools = [CreateXmlWorkspace, CreatePGGeodatabase, CreateSQLGeodatabase, ImportGeodatabase]
+        self.tools = [CreateXmlWorkspace, CreateGeodatabase, ImportGeodatabase]
 
 class CreateXmlWorkspace(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Create AZGS GeMS XML Workspace"
+        self.label = "Create Geomapmaker XML Workspace"
         self.description = ""
         self.canRunInBackground = False
 
@@ -152,14 +155,27 @@ class CreateXmlWorkspace(object):
 
         return
 
-class CreatePGGeodatabase(object):
+
+class CreateGeodatabase(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Create PostgreSQL Enterprise Geodatabase"
+        self.label = "Create Geomapmaker Enterprise Geodatabase"
         self.description = ""
         self.canRunInBackground = False
 
     def getParameterInfo(self):
+
+        dbPlatform = arcpy.Parameter(
+            displayName="Database Platform",
+            name="dbPlatform",
+            datatype="String",
+            parameterType="Required",
+            direction="Input",
+        )
+
+        dbPlatform.filter.type = "ValueList"
+        dbPlatform.filter.list = ["SQL Server", "PostgreSQL"]
+        dbPlatform.value = "SQL Server"
 
         # Instance
         instance = arcpy.Parameter(
@@ -170,10 +186,10 @@ class CreatePGGeodatabase(object):
             direction="Input",
         )
 
-        # Geodatabase Name
+        # Database Administrator
         database = arcpy.Parameter(
-            displayName="Geodatabase Name",
-            name="database",
+            displayName="Database Name",
+            name="datagase",
             datatype="GPString",
             parameterType="Required",
             direction="Input",
@@ -184,7 +200,7 @@ class CreatePGGeodatabase(object):
             displayName="Database Administrator",
             name="dbadmin",
             datatype="GPString",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Input",
         )
 
@@ -193,17 +209,19 @@ class CreatePGGeodatabase(object):
             displayName="Database Administrator Password",
             name="dbadminpwd",
             datatype="GPStringHidden",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Input",
+            enabled=True
         )
 
-        # Geodatabase Administrator Password
+        # Sde Administrator Password
         gdbadminpwd = arcpy.Parameter(
             displayName="Sde Password",
             name="gdbadminpwd",
             datatype="GPStringHidden",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Input",
+            enabled=True
         )
 
         # Authorization File
@@ -243,18 +261,7 @@ class CreatePGGeodatabase(object):
             multiValue=True
         )
 
-        if (testing):
-            instance.value = "127.0.0.1" 
-            database.value = "database{}".format(random.randint(0,999))
-            dbAdmin.value = "postgres"
-            dbAdminPwd.value =  "password"
-            gdbadminpwd.value =  "password"
-            authFile.value = authFilevalue
-            importXML.value = importXMLvalue
-            sdeOutputPath.value = sdeOutputPathvalue
-            versions.values = ["MC", "LB", "AZ"]
-
-        params = [instance, database, dbAdmin,
+        params = [dbPlatform, instance, database, dbAdmin,
                   dbAdminPwd, gdbadminpwd, authFile, importXML, sdeOutputPath, versions]
 
         return params
@@ -264,9 +271,49 @@ class CreatePGGeodatabase(object):
         return True
 
     def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
+
+        if (testing and parameters[0].valueAsText == 'SQL Server'):
+            parameters[1].value = "localhost\SQLEXPRESS"
+            parameters[2].value = "sqlserver{}".format(random.randint(0,999))
+            parameters[3].value = ""      
+            parameters[3].enabled = False  
+            parameters[4].value = "" 
+            parameters[4].enabled = False      
+            parameters[5].value = "Password12345"
+            parameters[6].value = authFilevalue
+            parameters[7].value = importXMLvalue
+            parameters[8].value = sdeOutputPathvalue      
+            parameters[9].values = versions      
+
+
+        elif (testing and parameters[0].valueAsText == 'PostgreSQL'):
+            parameters[1].value = instance
+            parameters[2].value = "postgresql{}".format(random.randint(0,999))
+            parameters[3].enabled = True
+            parameters[3].value = "postgres"
+            parameters[4].enabled = True
+            parameters[4].value = "Password12345"
+            parameters[5].value = "password"
+            parameters[6].value = authFilevalue
+            parameters[7].value = importXMLvalue
+            parameters[8].value = sdeOutputPathvalue      
+            parameters[9].values = versions  
+            parameters[4].value = "Password12345"
+
+
+        else:
+            parameters[1].value = ""
+            parameters[2].value = ""
+            parameters[3].value = ""
+            parameters[3].enabled = True
+            parameters[4].value = ""
+            parameters[4].enabled = True
+            parameters[5].value = ""
+            parameters[6].value = ""
+            parameters[7].value = ""
+            parameters[8].value = ""
+            parameters[9].values = []
+
         return
 
     def updateMessages(self, parameters):
@@ -277,15 +324,16 @@ class CreatePGGeodatabase(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
 
-        instance = parameters[0].valueAsText
-        database = parameters[1].valueAsText
-        dbAdmin = parameters[2].valueAsText
-        dbAdminPwd = parameters[3].valueAsText
-        gdbadminpwd = parameters[4].valueAsText
-        authFile = parameters[5].valueAsText
-        importXML = parameters[6].valueAsText
-        sdeOutputPath = parameters[7].valueAsText
-        versions = parameters[8].values
+        dbPlatform = parameters[0].valueAsText
+        instance = parameters[1].valueAsText
+        database = parameters[2].valueAsText
+        dbAdmin = parameters[3].valueAsText
+        dbAdminPwd = parameters[4].valueAsText
+        gdbadminpwd = parameters[5].valueAsText
+        authFile = parameters[6].valueAsText
+        importXML = parameters[7].valueAsText
+        sdeOutputPath = parameters[8].valueAsText
+        versions = parameters[9].values
 
         arcpy.SetProgressor("default")
 
@@ -295,16 +343,30 @@ class CreatePGGeodatabase(object):
         # Start progressor
         arcpy.SetProgressorLabel("Creating Enterprise Geodatabase..")
 
-        # Create Enterprise Geodatabase
-        createGDB_result = arcpy.CreateEnterpriseGeodatabase_management(database_platform="POSTGRESQL",
-                                                                        instance_name=instance,
-                                                                        database_name=database,
-                                                                        account_authentication="DATABASE_AUTH",
-                                                                        database_admin=dbAdmin,
-                                                                        database_admin_password=dbAdminPwd,
-                                                                        gdb_admin_name="sde",
-                                                                        gdb_admin_password=gdbadminpwd,
-                                                                        authorization_file=authFile
+        if (dbPlatform == "SQL Server"):
+            createGDB_result = arcpy.CreateEnterpriseGeodatabase_management(database_platform="SQL_SERVER",
+                                                                            instance_name=instance,
+                                                                            database_name=database,
+                                                                            account_authentication="OPERATING_SYSTEM_AUTH",
+                                                                            database_admin="",
+                                                                            database_admin_password="",
+                                                                            sde_schema="SDE_SCHEMA",
+                                                                            gdb_admin_name="sde",
+                                                                            gdb_admin_password=gdbadminpwd,
+                                                                            authorization_file=authFile
+                                                                        )
+
+
+        elif (dbPlatform == "PostgreSQL"):
+            createGDB_result = arcpy.CreateEnterpriseGeodatabase_management(database_platform="POSTGRESQL",
+                                                                            instance_name=instance,
+                                                                            database_name=database,
+                                                                            account_authentication="DATABASE_AUTH",
+                                                                            database_admin=dbAdmin,
+                                                                            database_admin_password=dbAdminPwd,
+                                                                            gdb_admin_name="sde",
+                                                                            gdb_admin_password=gdbadminpwd,
+                                                                            authorization_file=authFile
                                                                         )
 
         # Stop execution if CreateEnterpriseGeodatabase fails
@@ -315,8 +377,18 @@ class CreatePGGeodatabase(object):
 
         arcpy.SetProgressorLabel("Creating Database Connection..")
 
-        # Create Database Connection
-        gdbWorkspace = arcpy.CreateDatabaseConnection_management(out_folder_path=sdeOutputPath,
+        if (dbPlatform == "SQL Server"):
+            gdbWorkspace = arcpy.CreateDatabaseConnection_management(sdeOutputPath,
+                                                  database + "_geomapmaker.sde",
+                                                  database_platform="SQL_SERVER",
+                                                  instance=instance,
+                                                  account_authentication="OPERATING_SYSTEM_AUTH",
+                                                  username="",
+                                                  password="",
+                                                  database=database,
+                                                  )
+        elif (dbPlatform == "PostgreSQL"):    
+            gdbWorkspace = arcpy.CreateDatabaseConnection_management(out_folder_path=sdeOutputPath,
                                                   out_name=database + "_geomapmaker.sde",
                                                   database_platform="POSTGRESQL",
                                                   instance=instance,
@@ -366,176 +438,10 @@ class CreatePGGeodatabase(object):
 
         return
 
-class CreateSQLGeodatabase(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Create SQL Server Enterprise Geodatabase"
-        self.description = ""
-        self.canRunInBackground = False
-
-    def getParameterInfo(self):
-
-        # Instance
-        instance = arcpy.Parameter(
-            displayName="Instance",
-            name="instance",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input",
-        )
-
-        # Geodatabase Name
-        database = arcpy.Parameter(
-            displayName="Geodatabase Name",
-            name="database",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input",
-        )
-
-        # Authorization File
-        authFile = arcpy.Parameter(
-            displayName="Authorization File",
-            name="authFile",
-            datatype="DEFile",
-            parameterType="Required",
-            direction="Input",
-        )
-
-        # Import XML Workspace
-        importXML = arcpy.Parameter(
-            displayName="Import XML Workspace",
-            name="importXML",
-            datatype="DEFile",
-            parameterType="Required",
-            direction="Input",
-        )
-
-        # SDE Output Path
-        sdeOutputPath = arcpy.Parameter(
-            displayName="SDE Output Path",
-            name="sdeOutputPath",
-            datatype="DEFolder",
-            parameterType="Required",
-            direction="Input",
-        )
-
-        # List of Versions
-        versions = arcpy.Parameter(
-            displayName="Versions",
-            name="versions",
-            datatype="string",
-            parameterType="Optional",
-            direction="Input",
-            multiValue=True
-        )
-
-        if (testing):
-            instance.value = "MCAMP-DT\SQLEXPRESS"
-            database.value = "database{}".format(random.randint(0,999))
-            authFile.value = authFilevalue 
-            importXML.value = importXMLvalue 
-            sdeOutputPath.value = sdeOutputPathvalue
-            versions.values = ["MC", "LB", "AZ"]
-
-        params = [instance, database, authFile, importXML, sdeOutputPath, versions]
-
-        return params
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        return
-
-    def execute(self, parameters, messages):
-        """The source code of the tool."""
-
-        instance = parameters[0].valueAsText
-        database = parameters[1].valueAsText
-        authFile = parameters[2].valueAsText
-        importXML = parameters[3].valueAsText
-        sdeOutputPath = parameters[4].valueAsText
-        versions = parameters[5].values
-
-        arcpy.SetProgressor("default")
-
-        # Get the current project
-        aprx = arcpy.mp.ArcGISProject("CURRENT")    
-
-        # Start progressor
-        arcpy.SetProgressorLabel("Creating Enterprise Geodatabase..")
-
-        # Create Enterprise Geodatabase
-        createGDB_result = arcpy.CreateEnterpriseGeodatabase_management(
-            "SQL_SERVER", instance, database, "OPERATING_SYSTEM_AUTH", "", "", 
-            "DBO_SCHEMA", "", "", "", authFile) 
-                                                              
-        # Stop execution if CreateEnterpriseGeodatabase fails
-        if createGDB_result == False:
-            arcpy.ResetProgressor()
-            arcpy.AddError("Enterprise Geodatabase Creation Failed")
-            return
-
-        arcpy.SetProgressorLabel("Creating Database Connection..")
-
-        # Create Database Connection
-        gdbWorkspace = arcpy.CreateDatabaseConnection_management(sdeOutputPath,
-                                                  database + "_geomapmaker.sde",
-                                                  database_platform="SQL_SERVER",
-                                                  instance=instance,
-                                                  account_authentication="OPERATING_SYSTEM_AUTH",
-                                                  username="",
-                                                  password="",
-                                                  database=database,
-                                                  )
-
-        arcpy.SetProgressorLabel("Importing XML Workspace Document..")
-
-        # Import XML Workspace Document
-        updatedGdbWorkspace = arcpy.ImportXMLWorkspaceDocument_management(target_geodatabase=gdbWorkspace, 
-                                            in_file=importXML, 
-                                            )                                    
-
-        arcpy.SetProgressorLabel("Setting Datasets As Versioned..")
-
-        # Set enterprise gdb as the workspace
-        arcpy.env.workspace = updatedGdbWorkspace.getOutput(0)
-
-        # Register datasets as versioned
-        for dataset in arcpy.ListDatasets():
-            arcpy.SetProgressorLabel("Registering {0} as versioned..".format(dataset))
-            arcpy.RegisterAsVersioned_management(dataset)
-
-        # Register tables as versioned
-        for table in arcpy.ListTables():
-            arcpy.SetProgressorLabel("Registering {0} as versioned..".format(table))
-            arcpy.RegisterAsVersioned_management(table)
-
-        arcpy.SetProgressor("Creating Versions..")
-
-        # Create versions
-        for version in versions:
-            arcpy.SetProgressorLabel("Creating {0} version..".format(version))
-            arcpy.CreateVersion_management(arcpy.env.workspace, "DEFAULT", version, "PUBLIC")
-
-        arcpy.ResetProgressor()
-
-        return
-
 class ImportGeodatabase(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Import GeMS Enterprise Geodatabase"
+        self.label = "Import Geomapmaker Enterprise Geodatabase"
         self.description = ""
         self.canRunInBackground = False
 
@@ -560,7 +466,6 @@ class ImportGeodatabase(object):
         )
 
         version.filter.type = "ValueList"
-        #version.filter.list = ["MC", "LB"]
 
         params = [sde, version]
 
@@ -647,11 +552,11 @@ class ImportGeodatabase(object):
 
         # Find the current version
         oldVersion = arcpy.Describe(sde).connectionProperties.version
-        
+
         find_dict = {'connection_info': {'version': oldVersion}}
         replace_dict = {'connection_info': {'version': version}}
 
-        # Update version
+        # Change connection prop's version
         aprx.updateConnectionProperties(find_dict, replace_dict)
 
         arcpy.ResetProgressor()
