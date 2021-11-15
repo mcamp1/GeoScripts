@@ -6,7 +6,7 @@ from arcpy.arcobjects.arcobjects import Value
 from arcpy.management import ImportXMLWorkspaceDocument
 
 # Prepopulate parameters for easy testing
-prepopulate = True
+prepopulate = False
 baseFolder = r'C:\GeoScripts'
 
 # CreateXmlWorkspace prepopulate paths
@@ -239,9 +239,11 @@ class CreateGeodatabase(object):
             direction="Input",
         )
 
-        # SDE Output Path
-        sdeOutputPath = arcpy.Parameter(
-            displayName="SDE Output Path",
+        importXML.filter.list = ['xml']
+
+        # SDE Export Folder
+        sdeExportFolder= arcpy.Parameter(
+            displayName="SDE Export Folder",
             name="sdeOutputPath",
             datatype="DEFolder",
             parameterType="Required",
@@ -259,7 +261,7 @@ class CreateGeodatabase(object):
         )
 
         parameters = [dbPlatform, instance, database, dbAdmin, dbAdminPwd,
-         gdbadminpwd, authFile, importXML, sdeOutputPath, versions]
+         gdbadminpwd, authFile, importXML, sdeExportFolder, versions]
 
         if (prepopulate):
             parameters[1].value = "localhost"
@@ -337,7 +339,6 @@ class CreateGeodatabase(object):
                 gdb_admin_password=gdbadminpwd,
                 authorization_file=authFile
             )
-
 
         elif (dbPlatform == "PostgreSQL"):
             createGDB_result = arcpy.CreateEnterpriseGeodatabase_management(
