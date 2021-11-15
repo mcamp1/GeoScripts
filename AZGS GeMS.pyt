@@ -6,21 +6,19 @@ from arcpy.arcobjects.arcobjects import Value
 from arcpy.management import ImportXMLWorkspaceDocument
 
 # Prepopulate parameters for easy testing
-testing = True
+prepopulate = True
+baseFolder = r'C:\GeoScripts'
 
-# CreateXmlWorkspace test paths
-usgsGdbvalue = r'C:\GeoScripts\Input\usgsGems.gdb'
-symbologyCsvvalue = r'C:\GeoScripts\Input\cfsymbology.csv'
-attRulesCsvvalue = r'C:\GeoScripts\Input\attributeRules.csv'
-outPathXmlvalue = r'C:\GeoScripts\Output\Template.xml'
+# CreateXmlWorkspace prepopulate paths
+usgsGdbvalue = r'{}\Input\usgsGems.gdb'.format(baseFolder)
+symbologyCsvvalue = r'{}\Input\cfsymbology.csv'.format(baseFolder)
+attRulesCsvvalue = r'{}\Input\attributeRules.csv'.format(baseFolder)
+outPathXmlvalue = r'{}\Output\WorkspaceTemplate.xml'.format(baseFolder)
 
-# Create Geodatabase test paths
-instance = '127.0.0.1'
-authFilevalue = r"C:\GeoScripts\Input\keycodes"
-importXMLvalue = r"C:\GeoScripts\Input\GEMS_IMPORT.xml"
-sdeOutputPathvalue = r"C:\GeoScripts\Output\\"
-versions = ['LB', 'AZ', 'MC']
-
+# Create Geodatabase prepopulate paths
+authFilevalue = r"{}\Input\keycodes".format(baseFolder)
+importXMLvalue = r"{}\Input\WorkspaceTemplate.xml".format(baseFolder)
+sdeOutputPathvalue = r"{}\Output\\".format(baseFolder)
 
 # ImportGeodatabase
 
@@ -84,7 +82,7 @@ class CreateXmlWorkspace(object):
         dmuAttributeRules.filter.list = ['csv']
         outPathXml.filter.list = ['xml']
 
-        if (testing):
+        if (prepopulate):
             usgsGdb.value = usgsGdbvalue 
             symbologyCsv.value = symbologyCsvvalue
             dmuAttributeRules.value = attRulesCsvvalue
@@ -134,13 +132,13 @@ class CreateXmlWorkspace(object):
 
         # Make updates to the temp gdb
 
-        arcpy.SetProgressorLabel("Creating cfsymbology table.")
+        if symbologyCsv:
+            arcpy.SetProgressorLabel("Creating cfsymbology table.")
+            arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "cfsymbology")
 
-        arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "cfsymbology")
-
-        arcpy.SetProgressorLabel("Importing DMU Attribute Rules.")
-
-        arcpy.ImportAttributeRules_management("DescriptionOfMapUnits", dmuAttributeRules)
+        if dmuAttributeRules:
+            arcpy.SetProgressorLabel("Importing DMU Attribute Rules.")
+            arcpy.ImportAttributeRules_management("DescriptionOfMapUnits", dmuAttributeRules)
 
         # Export XML workspace  
         arcpy.SetProgressorLabel("Exporting geodatabase contents.")
@@ -154,7 +152,6 @@ class CreateXmlWorkspace(object):
         arcpy.ResetProgressor()
 
         return
-
 
 class CreateGeodatabase(object):
     def __init__(self):
@@ -174,8 +171,8 @@ class CreateGeodatabase(object):
         )
 
         dbPlatform.filter.type = "ValueList"
-        dbPlatform.filter.list = ["SQL Server", "PostgreSQL"]
-        dbPlatform.value = "SQL Server"
+        dbPlatform.filter.list = ["PostgreSQL", "SQL Server"]
+        dbPlatform.value = "PostgreSQL"
 
         # Instance
         instance = arcpy.Parameter(
@@ -219,7 +216,7 @@ class CreateGeodatabase(object):
             displayName="Sde Password",
             name="gdbadminpwd",
             datatype="GPStringHidden",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input",
             enabled=True
         )
@@ -261,10 +258,22 @@ class CreateGeodatabase(object):
             multiValue=True
         )
 
-        params = [dbPlatform, instance, database, dbAdmin,
-                  dbAdminPwd, gdbadminpwd, authFile, importXML, sdeOutputPath, versions]
+        parameters = [dbPlatform, instance, database, dbAdmin, dbAdminPwd,
+         gdbadminpwd, authFile, importXML, sdeOutputPath, versions]
 
-        return params
+        if (prepopulate):
+            parameters[1].value = "localhost"
+            parameters[2].value = "database{}".format(random.randint(0,999))
+            parameters[3].value = "postgres"
+            parameters[4].value = "Password12345"
+            parameters[5].value = "password"
+            parameters[6].value = authFilevalue
+            parameters[7].value = importXMLvalue
+            parameters[8].value = sdeOutputPathvalue
+            parameters[9].values = ['LB', 'AZ', 'MC'] 
+
+        return parameters
+        
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -272,49 +281,21 @@ class CreateGeodatabase(object):
 
     def updateParameters(self, parameters):
 
-        if (testing and parameters[0].valueAsText == 'SQL Server'):
+        # prepopulate values
+        if (prepopulate and parameters[0].valueAsText == 'SQL Server'):
             parameters[1].value = "localhost\SQLEXPRESS"
-            parameters[2].value = "sqlserver{}".format(random.randint(0,999))
             parameters[3].value = ""      
-            parameters[3].enabled = False  
             parameters[4].value = "" 
-            parameters[4].enabled = False      
-            parameters[5].value = "Password12345"
-            parameters[6].value = authFilevalue
-            parameters[7].value = importXMLvalue
-            parameters[8].value = sdeOutputPathvalue      
-            parameters[9].values = versions      
-
-
-        elif (testing and parameters[0].valueAsText == 'PostgreSQL'):
-            parameters[1].value = instance
-            parameters[2].value = "postgresql{}".format(random.randint(0,999))
-            parameters[3].enabled = True
-            parameters[3].value = "postgres"
-            parameters[4].enabled = True
-            parameters[4].value = "Password12345"
-            parameters[5].value = "password"
-            parameters[6].value = authFilevalue
-            parameters[7].value = importXMLvalue
-            parameters[8].value = sdeOutputPathvalue      
-            parameters[9].values = versions  
-            parameters[4].value = "Password12345"
-
-
-        else:
-            parameters[1].value = ""
-            parameters[2].value = ""
-            parameters[3].value = ""
-            parameters[3].enabled = True
-            parameters[4].value = ""
-            parameters[4].enabled = True
-            parameters[5].value = ""
-            parameters[6].value = ""
-            parameters[7].value = ""
-            parameters[8].value = ""
-            parameters[9].values = []
+            parameters[5].value = "Password12345" 
+            
+        elif (prepopulate and parameters[0].valueAsText == 'PostgreSQL'):
+            parameters[1].value = "localhost"
+            parameters[3].value = "postgres"      
+            parameters[4].value = "Password12345" 
+            parameters[5].value = "password" 
 
         return
+
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
@@ -421,11 +402,13 @@ class CreateGeodatabase(object):
 
         # Register datasets as versioned
         for dataset in arcpy.ListDatasets():
+            arcpy.AddMessage(dataset)
             arcpy.SetProgressorLabel("Registering {0} as versioned..".format(dataset))
             arcpy.RegisterAsVersioned_management(dataset)
 
         # Register tables as versioned
         for table in arcpy.ListTables():
+            arcpy.AddMessage(table)
             arcpy.SetProgressorLabel("Registering {0} as versioned..".format(table))
             arcpy.RegisterAsVersioned_management(table)
 
@@ -484,6 +467,7 @@ class ImportGeodatabase(object):
 
         sde = parameters[0].valueAsText
 
+        # List versions when a SDE is selected
         if sde:
             # SDE's ListVersions() as options
             parameters[1].filter.list = arcpy.ListVersions(sde)
@@ -518,8 +502,11 @@ class ImportGeodatabase(object):
         # Check if there was an active map
         if not activeMap:
             arcpy.ResetProgressor()
-            arcpy.AddError("No active map.")
+            arcpy.AddError("Map not found.")
             return
+
+        # Set SDE filea s the default gdb
+        aprx.defaultGeodatabase = sde
 
         arcpy.SetProgressorLabel("Removing layers from map..")
 
@@ -551,8 +538,7 @@ class ImportGeodatabase(object):
         
         arcpy.SetProgressorLabel("Setting versions as {}..".format(version))
 
-        # This feels a little hacky and heavy-handed,
-        # but theres a when calling Change Version with the ArcPy tool
+        # This feels a little hacky and heavy-handed, but theres a when calling Change Version with the ArcPy tool
         # https://support.esri.com/en/bugs/nimbus/QlVHLTAwMDExNDAxNw==
 
         # Find the current version
