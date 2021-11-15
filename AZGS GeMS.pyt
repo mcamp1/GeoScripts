@@ -145,7 +145,7 @@ class CreateXmlWorkspace(object):
         # Export XML workspace  
         arcpy.SetProgressorLabel("Exporting geodatabase contents.")
 
-        arcpy.ExportXMLWorkspaceDocument_management(tmpGDB, outPathXml )
+        arcpy.ExportXMLWorkspaceDocument_management(tmpGDB, outPathXml)
 
         arcpy.SetProgressorLabel("Removing temporary geodatabase.")
 
@@ -344,30 +344,32 @@ class CreateGeodatabase(object):
         arcpy.SetProgressorLabel("Creating Enterprise Geodatabase..")
 
         if (dbPlatform == "SQL Server"):
-            createGDB_result = arcpy.CreateEnterpriseGeodatabase_management(database_platform="SQL_SERVER",
-                                                                            instance_name=instance,
-                                                                            database_name=database,
-                                                                            account_authentication="OPERATING_SYSTEM_AUTH",
-                                                                            database_admin="",
-                                                                            database_admin_password="",
-                                                                            sde_schema="SDE_SCHEMA",
-                                                                            gdb_admin_name="sde",
-                                                                            gdb_admin_password=gdbadminpwd,
-                                                                            authorization_file=authFile
-                                                                        )
+            createGDB_result = arcpy.CreateEnterpriseGeodatabase_management(
+                database_platform="SQL_SERVER",
+                instance_name=instance,
+                database_name=database,
+                account_authentication="OPERATING_SYSTEM_AUTH",
+                database_admin="",
+                database_admin_password="",
+                sde_schema="SDE_SCHEMA",
+                gdb_admin_name="sde",
+                gdb_admin_password=gdbadminpwd,
+                authorization_file=authFile
+            )
 
 
         elif (dbPlatform == "PostgreSQL"):
-            createGDB_result = arcpy.CreateEnterpriseGeodatabase_management(database_platform="POSTGRESQL",
-                                                                            instance_name=instance,
-                                                                            database_name=database,
-                                                                            account_authentication="DATABASE_AUTH",
-                                                                            database_admin=dbAdmin,
-                                                                            database_admin_password=dbAdminPwd,
-                                                                            gdb_admin_name="sde",
-                                                                            gdb_admin_password=gdbadminpwd,
-                                                                            authorization_file=authFile
-                                                                        )
+            createGDB_result = arcpy.CreateEnterpriseGeodatabase_management(
+                database_platform="POSTGRESQL",
+                instance_name=instance,
+                database_name=database,
+                account_authentication="DATABASE_AUTH",
+                database_admin=dbAdmin,
+                database_admin_password=dbAdminPwd,
+                gdb_admin_name="sde",
+                gdb_admin_password=gdbadminpwd,
+                authorization_file=authFile
+            )
 
         # Stop execution if CreateEnterpriseGeodatabase fails
         if createGDB_result == False:
@@ -378,26 +380,29 @@ class CreateGeodatabase(object):
         arcpy.SetProgressorLabel("Creating Database Connection..")
 
         if (dbPlatform == "SQL Server"):
-            gdbWorkspace = arcpy.CreateDatabaseConnection_management(sdeOutputPath,
-                                                  database + "_geomapmaker.sde",
-                                                  database_platform="SQL_SERVER",
-                                                  instance=instance,
-                                                  account_authentication="OPERATING_SYSTEM_AUTH",
-                                                  username="",
-                                                  password="",
-                                                  database=database,
-                                                  )
+            gdbWorkspace = arcpy.CreateDatabaseConnection_management(
+                sdeOutputPath,
+                database + "_geomapmaker.sde",
+                database_platform="SQL_SERVER",
+                instance=instance,
+                account_authentication="OPERATING_SYSTEM_AUTH",
+                username="",
+                password="",
+                database=database,
+            )
+
         elif (dbPlatform == "PostgreSQL"):    
-            gdbWorkspace = arcpy.CreateDatabaseConnection_management(out_folder_path=sdeOutputPath,
-                                                  out_name=database + "_geomapmaker.sde",
-                                                  database_platform="POSTGRESQL",
-                                                  instance=instance,
-                                                  account_authentication="DATABASE_AUTH",
-                                                  username="sde",
-                                                  password=gdbadminpwd,
-                                                  save_user_pass="SAVE_USERNAME",
-                                                  database=database,
-                                                  )
+            gdbWorkspace = arcpy.CreateDatabaseConnection_management(
+                out_folder_path=sdeOutputPath,
+                out_name=database + "_geomapmaker.sde",
+                database_platform="POSTGRESQL",
+                instance=instance,
+                account_authentication="DATABASE_AUTH",
+                username="sde",
+                password=gdbadminpwd,
+                save_user_pass="SAVE_USERNAME",
+                database=database,
+            )
 
         arcpy.SetProgressorLabel("Importing XML Workspace Document..")
 
