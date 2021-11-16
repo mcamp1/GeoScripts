@@ -6,26 +6,23 @@ from arcpy.arcobjects.arcobjects import Value
 from arcpy.management import ImportXMLWorkspaceDocument
 
 # Prepopulate parameters for easy testing
-prepopulate = False
+prepopulate = True
 baseFolder = r'C:\GeoScripts'
 
-# CreateXmlWorkspace prepopulate paths
+# Input prepopulate paths
 usgsGdbvalue = r'{}\Input\usgsGems.gdb'.format(baseFolder)
 symbologyCsvvalue = r'{}\Input\cfsymbology.csv'.format(baseFolder)
 attRulesCsvvalue = r'{}\Input\attributeRules.csv'.format(baseFolder)
-outPathXmlvalue = r'{}\Output\WorkspaceTemplate.xml'.format(baseFolder)
-
-# Create Geodatabase prepopulate paths
 authFilevalue = r"{}\Input\keycodes".format(baseFolder)
 importXMLvalue = r"{}\Input\WorkspaceTemplate.xml".format(baseFolder)
-sdeOutputPathvalue = r"{}\Output\\".format(baseFolder)
 
-# ImportGeodatabase
+# Output prepopulate paths
+outPathXmlvalue = r'{}\Output\WorkspaceTemplate.xml'.format(baseFolder)
+sdeOutputPathvalue = r"{}\Output\\".format(baseFolder)
 
 class Toolbox(object):
     def __init__(self):
-        """Define the toolbox (the name of the toolbox is the name of the
-        .pyt file)."""
+        """Define the toolbox (the name of the toolbox is the name of the .pyt file)."""
         self.label = "Toolbox"
         self.alias = "toolbox"
 
@@ -431,7 +428,7 @@ class ImportGeodatabase(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
         self.label = "Import Geomapmaker Enterprise Geodatabase"
-        self.description = ""
+        self.description = "Import Geomapmaker Enterprise Geodatabase"
         self.canRunInBackground = False
 
     def getParameterInfo(self):
@@ -445,6 +442,8 @@ class ImportGeodatabase(object):
             parameterType="Required",
             direction="Input",
         )
+
+        sde.filter.list = ["RemoteDatabase"]
 
         version = arcpy.Parameter(
             displayName="Version",
