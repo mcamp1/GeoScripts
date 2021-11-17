@@ -87,7 +87,7 @@ class CreateXmlWorkspace(object):
 
          # Add custom fields to DMU
         dmuCustomFields = arcpy.Parameter(
-            displayName="Add custom fields to DMU",
+            displayName="Add AZGS Custom Fields to DMU table",
             name="dmuCustomFields",
             datatype="GPBoolean",
             parameterType="Required",
@@ -609,7 +609,7 @@ class ImportGeodatabase(object):
         
         arcpy.SetProgressorLabel("Setting versions as {}..".format(version))
 
-        # This feels a little hacky and heavy-handed, but theres a when calling Change Version with the ArcPy tool
+        # This feels hacky and heavy-handed, but there is a bug when calling Change Version in the ArcPy tool
         # https://support.esri.com/en/bugs/nimbus/QlVHLTAwMDExNDAxNw==
 
         # Find the current version
