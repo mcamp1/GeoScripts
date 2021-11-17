@@ -1,5 +1,5 @@
 ﻿NAME,DESCRIPTION,TYPE,SUBTYPE,FIELD,ISEDITABLE,TRIGGERINSERT,TRIGGERDELETE,TRIGGERUPDATE,SCRIPTEXPRESSION,ERRORNUMBER,ERRORMESSAGE,EXCLUDECLIENTEVALUATION,ISENABLED,BATCH,SEVERITY,TAGS,CATEGORY,CHECKPARAMETERS
-Calculate HexColor from RGB,Converts the GeMS rgb ,CALCULATION,,hexcolor,False,True,False,True,"if ($feature.paragraphstyle == 'Heading') return """"
+Calculate HexColor from RGB,Converts the GeMS rgb to hex,CALCULATION,,hexcolor,False,True,False,True,"if ($feature.paragraphstyle == 'Heading') return """"
 
 var rgb = $feature.areafillrgb
 

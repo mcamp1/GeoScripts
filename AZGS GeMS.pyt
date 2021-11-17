@@ -12,7 +12,7 @@ baseFolder = r'C:\GeoScripts'
 # Input prepopulate paths
 usgsGdbvalue = r'{}\Input\usgsGems.gdb'.format(baseFolder)
 symbologyCsvvalue = r'{}\Input\cfsymbology.csv'.format(baseFolder)
-attRulesCsvvalue = r'{}\Input\attributeRules.csv'.format(baseFolder)
+attRulesCsvvalue = r'{}\Input\DmuAttributeRules.csv'.format(baseFolder)
 authFilevalue = r"{}\Input\keycodes".format(baseFolder)
 importXMLvalue = r"{}\Input\WorkspaceTemplate.xml".format(baseFolder)
 
