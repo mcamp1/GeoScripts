@@ -47,7 +47,7 @@ class CreateXmlWorkspace(object):
             parameterType="Required",
             direction="Input",
         )
- 
+
         # CF Symbology CSV
         symbologyCsv = arcpy.Parameter(
             displayName="CF Symbology CSV",
@@ -75,6 +75,26 @@ class CreateXmlWorkspace(object):
             direction="Output",
         )
 
+        # DMU Global ID
+        dmuGlobalId = arcpy.Parameter(
+            displayName="Add Global ID to DMU table",
+            name="dmuGlobalId",
+            datatype="GPBoolean",
+            parameterType="Required",
+            category="Mandatory Steps",
+            direction="Input",
+        )
+
+        # Create ParagraphStyle domain
+        paragraphStyleDomain = arcpy.Parameter(
+            displayName="Create ParagraphStyle domain for DMU table",
+            name="paragraphStyleDomain",
+            datatype="GPBoolean",
+            parameterType="Required",
+            category="Mandatory Steps",
+            direction="Input",
+        )
+
         symbologyCsv.filter.list = ['csv']
         dmuAttributeRules.filter.list = ['csv']
         outPathXml.filter.list = ['xml']
@@ -85,7 +105,7 @@ class CreateXmlWorkspace(object):
             dmuAttributeRules.value = attRulesCsvvalue
             outPathXml.value = outPathXmlvalue
 
-        params = [usgsGdb, symbologyCsv, dmuAttributeRules, outPathXml]
+        params = [usgsGdb, symbologyCsv, dmuAttributeRules, outPathXml, dmuGlobalId, paragraphStyleDomain]
 
         return params
 
@@ -97,6 +117,10 @@ class CreateXmlWorkspace(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
+
+        parameters[4].value = "True"
+        parameters[5].value = "True"
+
         return
 
     def updateMessages(self, parameters):
@@ -111,6 +135,8 @@ class CreateXmlWorkspace(object):
         symbologyCsv = parameters[1].valueAsText
         dmuAttributeRules = parameters[2].valueAsText
         outPathXml = parameters[3].valueAsText
+        dmuGlobalId = parameters[4].valueAsText
+        paragraphStyleDomain = parameters[5].valueAsText
 
         arcpy.SetProgressor("default")
 
@@ -126,8 +152,32 @@ class CreateXmlWorkspace(object):
         arcpy.Copy_management(usgsGdb, tmpGDB)
 
         arcpy.env.workspace = tmpGDB
+        
+        ####### Make updates to the temp gdb #######
 
-        # Make updates to the temp gdb
+        # Select the DMU table
+        dmuTable = arcpy.ListTables("DescriptionOfMapUnits")[0]
+
+        # Add Global ID to DMU
+        if dmuGlobalId:
+            arcpy.SetProgressorLabel("Adding Global ID to DMU table.")
+            arcpy.AddGlobalIDs_management(dmuTable)
+
+        if paragraphStyleDomain:
+            arcpy.SetProgressorLabel("Creating ParagraphStyle domain for DMU table.")
+
+            # Create ParagraphStyle domain
+            arcpy.CreateDomain_management(tmpGDB, "ParagraphStyle", "Type of DMU", "TEXT", "CODED")
+
+            # ParagraphStyle domain dictionary
+            domDict = {"Heading":"DMU Heading", "Standard":"Standard DMU"}
+
+            #Add dmu types to the domain
+            for code in domDict:        
+                arcpy.AddCodedValueToDomain_management(tmpGDB, "ParagraphStyle", code, domDict[code])
+
+            # Constrain ParagraphStyle field to the domain
+            arcpy.AssignDomainToField_management(dmuTable, "ParagraphStyle", "ParagraphStyle")
 
         if symbologyCsv:
             arcpy.SetProgressorLabel("Creating cfsymbology table.")
