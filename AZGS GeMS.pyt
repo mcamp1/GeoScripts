@@ -85,6 +85,16 @@ class CreateXmlWorkspace(object):
             direction="Input",
         )
 
+         # Add custom fields to DMU
+        dmuCustomFields = arcpy.Parameter(
+            displayName="Add custom fields to DMU",
+            name="dmuCustomFields",
+            datatype="GPBoolean",
+            parameterType="Required",
+            category="Mandatory Steps",
+            direction="Input",
+        )
+
         # Create ParagraphStyle domain
         paragraphStyleDomain = arcpy.Parameter(
             displayName="Create ParagraphStyle domain for DMU table",
@@ -105,7 +115,7 @@ class CreateXmlWorkspace(object):
             dmuAttributeRules.value = attRulesCsvvalue
             outPathXml.value = outPathXmlvalue
 
-        params = [usgsGdb, symbologyCsv, dmuAttributeRules, outPathXml, dmuGlobalId, paragraphStyleDomain]
+        params = [usgsGdb, symbologyCsv, dmuAttributeRules, outPathXml, dmuGlobalId, dmuCustomFields, paragraphStyleDomain]
 
         return params
 
@@ -118,8 +128,10 @@ class CreateXmlWorkspace(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
+        # Force these checkboxes to be true
         parameters[4].value = "True"
         parameters[5].value = "True"
+        parameters[6].value = "True"
 
         return
 
@@ -136,7 +148,8 @@ class CreateXmlWorkspace(object):
         dmuAttributeRules = parameters[2].valueAsText
         outPathXml = parameters[3].valueAsText
         dmuGlobalId = parameters[4].valueAsText
-        paragraphStyleDomain = parameters[5].valueAsText
+        dmuCustomFields = parameters[5].valueAsText
+        paragraphStyleDomain = parameters[6].valueAsText
 
         arcpy.SetProgressor("default")
 
@@ -156,13 +169,20 @@ class CreateXmlWorkspace(object):
         ####### Make updates to the temp gdb #######
 
         # Select the DMU table
-        dmuTable = arcpy.ListTables("DescriptionOfMapUnits")[0]
+        dmuTable = arcpy.ListTables("*DescriptionOfMapUnits")[0]
+
+        arcpy.AddMessage(dmuTable)
 
         # Add Global ID to DMU
         if dmuGlobalId:
             arcpy.SetProgressorLabel("Adding Global ID to DMU table.")
             arcpy.AddGlobalIDs_management(dmuTable)
 
+        if dmuCustomFields:
+            arcpy.SetProgressorLabel("Adding custom fields to DMU.")
+            arcpy.AddField_management(dmuTable, "RelativeAge", "TEXT")
+            arcpy.AddField_management(dmuTable, "HexColor", "TEXT")
+            
         if paragraphStyleDomain:
             arcpy.SetProgressorLabel("Creating ParagraphStyle domain for DMU table.")
 
@@ -194,6 +214,7 @@ class CreateXmlWorkspace(object):
 
         arcpy.SetProgressorLabel("Removing temporary geodatabase.")
 
+        # Delete the temp gbd
         arcpy.Delete_management(tmpGDB)
 
         arcpy.ResetProgressor()
