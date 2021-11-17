@@ -169,7 +169,7 @@ class CreateXmlWorkspace(object):
         ####### Make updates to the temp gdb #######
 
         # Select the DMU table
-        dmuTable = arcpy.ListTables("*DescriptionOfMapUnits")[0]
+        dmuTable = arcpy.ListTables("DescriptionOfMapUnits")[0]
 
         arcpy.AddMessage(dmuTable)
 
@@ -190,7 +190,7 @@ class CreateXmlWorkspace(object):
             arcpy.CreateDomain_management(tmpGDB, "ParagraphStyle", "Type of DMU", "TEXT", "CODED")
 
             # ParagraphStyle domain dictionary
-            domDict = {"Heading":"DMU Heading", "Standard":"Standard DMU"}
+            domDict = {"Heading":"Heading", "Standard":"Standard"}
 
             #Add dmu types to the domain
             for code in domDict:        
@@ -594,17 +594,17 @@ class ImportGeodatabase(object):
 
         arcpy.env.workspace = sde
 
-        arcpy.SetProgressorLabel("Adding features to map..")
-
         # Add feature classes to map
         for dataset in arcpy.ListDatasets():
             for feature in arcpy.ListFeatureClasses(feature_dataset=dataset):
+                arcpy.SetProgressorLabel("Adding {} to map..".format(feature))
                 activeMap.addDataFromPath("{}\\{}\\{}".format(sde, dataset, feature))
 
         arcpy.SetProgressor("Adding tables to map..")
 
         # Add tables to map
         for table in arcpy.ListTables():
+            arcpy.SetProgressorLabel("Adding {} to map..".format(table))
             activeMap.addDataFromPath("{}\\{}".format(sde, table))
         
         arcpy.SetProgressorLabel("Setting versions as {}..".format(version))
