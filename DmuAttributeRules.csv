@@ -1,10 +1,4 @@
 ﻿NAME,DESCRIPTION,TYPE,SUBTYPE,FIELD,ISEDITABLE,TRIGGERINSERT,TRIGGERDELETE,TRIGGERUPDATE,SCRIPTEXPRESSION,ERRORNUMBER,ERRORMESSAGE,EXCLUDECLIENTEVALUATION,ISENABLED,BATCH,SEVERITY,TAGS,CATEGORY,CHECKPARAMETERS
-Calculate HexColor from RGB,Converts the GeMS rgb to hex,CALCULATION,,hexcolor,False,True,False,True,"if ($feature.paragraphstyle == 'Heading') return null;
-var rgb = $feature.areafillrgb;
-var firstNumber = ToHex(Left(rgb,3));
-var secondNumber = ToHex(Mid(rgb,4,3));
-var thirdNumber = ToHex(Right(rgb,3));
-return Concatenate([""#"",firstNumber,secondNumber,thirdNumber], '');",,,False,True,False,,,0,"{""type"":""PropertySet"",""propertySetItems"":[]}"
 Required Fields,Required fields for dmu.,CONSTRAINT,,,True,True,False,True,"if ($feature.paragraphstyle == 'Heading')
 {
  if($feature.name==null||$feature.name==""""){return{""errorMessage"":""name is required.""};}
@@ -20,7 +14,7 @@ else
  if($feature.geomaterial==null||$feature.geomaterial==""""){return{""errorMessage"":""geomaterial is required.""};}
  if($feature.geomaterialconfidence==null||$feature.geomaterialconfidence==""""){return{""errorMessage"":""geomaterialconfidence is required.""};}
 }
-return true;",100,Required field is missing.,False,True,False,,,,"{""type"":""PropertySet"",""propertySetItems"":[]}"
+return true;",100,Required field is missing.,False,True,False,,,0,"{""type"":""PropertySet"",""propertySetItems"":[]}"
 Validate Hierarchy Key,Validate Hierarchy Key,CONSTRAINT,,,True,True,False,True,"// Don't worry about empty values for now
 if ($feature.hierarchykey == null) return true;
 // Split string by '-'
