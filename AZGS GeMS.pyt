@@ -6,7 +6,7 @@ from arcpy.arcobjects.arcobjects import Value
 from arcpy.management import ImportXMLWorkspaceDocument
 
 # Prepopulate parameters for easy testing
-prepopulate = True
+prepopulate = False
 baseFolder = r'C:\GeoScripts'
 
 # Input prepopulate paths
@@ -47,6 +47,8 @@ class CreateXmlWorkspace(object):
             parameterType="Required",
             direction="Input",
         )
+
+        usgsGdb.filter.list = ["LocalDatabase"]
 
         # CF Symbology CSV
         symbologyCsv = arcpy.Parameter(
