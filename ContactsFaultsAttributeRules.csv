@@ -1,0 +1,11 @@
+﻿NAME,DESCRIPTION,TYPE,SUBTYPE,FIELD,ISEDITABLE,TRIGGERINSERT,TRIGGERDELETE,TRIGGERUPDATE,SCRIPTEXPRESSION,ERRORNUMBER,ERRORMESSAGE,EXCLUDECLIENTEVALUATION,ISENABLED,BATCH,SEVERITY,TAGS,CATEGORY,CHECKPARAMETERS
+Required Fields,Required fields for contacts and faults.,CONSTRAINT,,,True,True,False,True,"if($feature.label==null||$feature.label==""""){return{""errorMessage"":""label is required.""};}
+if($feature.type==null||$feature.type==""""){return{""errorMessage"":""type is required.""};}
+if($feature.symbol==null||$feature.symbol==""""){return{""errorMessage"":""symbol is required.""};}
+if($feature.identityconfidence==null||$feature.identityconfidence==""""){return{""errorMessage"":""identityconfidence is required.""};}
+if($feature.existenceconfidence==null||$feature.existenceconfidence==""""){return{""errorMessage"":""existenceconfidence is required.""};}
+if($feature.locationconfidencemeters==null||$feature.locationconfidencemeters==""""){return{""errorMessage"":""locationconfidencemeters is required.""};}
+if($feature.isconcealed==null||$feature.isconcealed==""""){return{""errorMessage"":""isconcealed is required.""};}
+if($feature.datasourceid==null||$feature.datasourceid==""""){return{""errorMessage"":""datasourceid is required.""};}
+
+return true;",100,Required field is missing.,False,True,False,,,,"{""type"":""PropertySet"",""propertySetItems"":[]}"
