@@ -193,6 +193,24 @@ class CreateXmlWorkspace(object):
             arcpy.SetProgressorLabel("Adding Global ID to Contacts and Faults.")
             arcpy.AddGlobalIDs_management(cfTable)
 
+        # Add CF Domains
+        if addDomains:
+            arcpy.SetProgressorLabel("Creating IsConcealed domain for Contacts and Faults.")
+
+            # Create ParagraphStyle domain
+            arcpy.CreateDomain_management(tmpGDB, "IsConcealedDomain", "Type", "TEXT", "CODED")
+
+            # ParagraphStyle domain dictionary
+            domDict = {"Y":"Y", "N":"N"}
+
+            #Add dmu types to the domain
+            for code in domDict:        
+                arcpy.AddCodedValueToDomain_management(tmpGDB, "IsConcealedDomain", code, domDict[code])
+
+            # Constrain ParagraphStyle field to the domain
+            arcpy.AssignDomainToField_management('ContactsAndFaults', "IsConcealed", "IsConcealedDomain")
+
+        # Add CF attribute rules
         if cfAttributeRules:
             arcpy.SetProgressorLabel("Importing Contacts and Faults Attribute Rules.")
             arcpy.ImportAttributeRules_management(cfTable[0], cfAttributeRules)
