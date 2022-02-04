@@ -6,18 +6,19 @@ from arcpy.arcobjects.arcobjects import Value
 from arcpy.management import ImportXMLWorkspaceDocument
 
 # Prepopulate parameters for easy testing
-prepopulate = False
+prepopulate = True
 baseFolder = r'C:\GeoScripts'
 
 # Input prepopulate paths
 usgsGdbvalue = r'{}\Input\usgsGems.gdb'.format(baseFolder)
 symbologyCsvvalue = r'{}\Input\cfsymbology.csv'.format(baseFolder)
-attRulesCsvvalue = r'{}\Input\DmuAttributeRules.csv'.format(baseFolder)
+cfARvalue = r'{}\Input\ContactsFaultsAttributeRules.csv'.format(baseFolder)
+dmuARvalue = r'{}\Input\DmuAttributeRules.csv'.format(baseFolder)
 authFilevalue = r"{}\Input\keycodes".format(baseFolder)
 importXMLvalue = r"{}\Input\WorkspaceTemplate.xml".format(baseFolder)
 
 # Output prepopulate paths
-outPathXmlvalue = r'{}\Output\WorkspaceTemplate.xml'.format(baseFolder)
+outPathXmlvalue = r'{}\Output\CF_WorkspaceTemplate.xml'.format(baseFolder)
 sdeOutputPathvalue = r"{}\Output\\".format(baseFolder)
 
 class Toolbox(object):
@@ -59,6 +60,15 @@ class CreateXmlWorkspace(object):
             direction="Input",
         )
 
+        # CF Attribute Rules
+        cfAttributeRules = arcpy.Parameter(
+            displayName="CF Attribute Rules",
+            name="cfAttributeRules",
+            datatype="DEFile",
+            parameterType="Optional",
+            direction="Input",
+        )
+
         # DMU Attribute Rules
         dmuAttributeRules = arcpy.Parameter(
             displayName="DMU Attribute Rules",
@@ -78,9 +88,9 @@ class CreateXmlWorkspace(object):
         )
 
         # DMU Global ID
-        dmuGlobalId = arcpy.Parameter(
-            displayName="Add Global ID to DMU table",
-            name="dmuGlobalId",
+        addGlobalId = arcpy.Parameter(
+            displayName="Add Global IDs",
+            name="addGlobalId",
             datatype="GPBoolean",
             parameterType="Required",
             category="Mandatory Steps",
@@ -89,7 +99,7 @@ class CreateXmlWorkspace(object):
 
          # Add custom fields to DMU
         dmuCustomFields = arcpy.Parameter(
-            displayName="Add AZGS Custom Fields to DMU table",
+            displayName="Add AZGS Custom Fields",
             name="dmuCustomFields",
             datatype="GPBoolean",
             parameterType="Required",
@@ -97,10 +107,10 @@ class CreateXmlWorkspace(object):
             direction="Input",
         )
 
-        # Create ParagraphStyle domain
-        paragraphStyleDomain = arcpy.Parameter(
-            displayName="Create ParagraphStyle domain for DMU table",
-            name="paragraphStyleDomain",
+        # Add domain
+        addDomains = arcpy.Parameter(
+            displayName="Add domains",
+            name="addDomains",
             datatype="GPBoolean",
             parameterType="Required",
             category="Mandatory Steps",
@@ -108,16 +118,18 @@ class CreateXmlWorkspace(object):
         )
 
         symbologyCsv.filter.list = ['csv']
+        cfAttributeRules.filter.list = ['csv']
         dmuAttributeRules.filter.list = ['csv']
         outPathXml.filter.list = ['xml']
 
         if (prepopulate):
             usgsGdb.value = usgsGdbvalue 
             symbologyCsv.value = symbologyCsvvalue
-            dmuAttributeRules.value = attRulesCsvvalue
+            cfAttributeRules.value = cfARvalue
+            dmuAttributeRules.value = dmuARvalue
             outPathXml.value = outPathXmlvalue
 
-        params = [usgsGdb, symbologyCsv, dmuAttributeRules, outPathXml, dmuGlobalId, dmuCustomFields, paragraphStyleDomain]
+        params = [usgsGdb, symbologyCsv, cfAttributeRules, dmuAttributeRules, outPathXml, addGlobalId, dmuCustomFields, addDomains]
 
         return params
 
@@ -131,9 +143,9 @@ class CreateXmlWorkspace(object):
         has been changed."""
 
         # Force these checkboxes to be true
-        parameters[4].value = "True"
         parameters[5].value = "True"
         parameters[6].value = "True"
+        parameters[7].value = "True"
 
         return
 
@@ -147,11 +159,12 @@ class CreateXmlWorkspace(object):
 
         usgsGdb = parameters[0].valueAsText
         symbologyCsv = parameters[1].valueAsText
-        dmuAttributeRules = parameters[2].valueAsText
-        outPathXml = parameters[3].valueAsText
-        dmuGlobalId = parameters[4].valueAsText
-        dmuCustomFields = parameters[5].valueAsText
-        paragraphStyleDomain = parameters[6].valueAsText
+        cfAttributeRules = parameters[2].valueAsText
+        dmuAttributeRules = parameters[3].valueAsText
+        outPathXml = parameters[4].valueAsText
+        addGlobalId = parameters[5].valueAsText
+        dmuCustomFields = parameters[6].valueAsText
+        addDomains = parameters[7].valueAsText
 
         arcpy.SetProgressor("default")
 
@@ -170,13 +183,27 @@ class CreateXmlWorkspace(object):
         
         ####### Make updates to the temp gdb #######
 
+        # Select the cf table
+        cfTable = arcpy.ListFeatureClasses('ContactsAndFaults', feature_dataset = 'GeologicMap')
+
+        arcpy.AddMessage(cfTable)
+
+        # Add Global ID to contacts and faults
+        if addGlobalId:
+            arcpy.SetProgressorLabel("Adding Global ID to Contacts and Faults.")
+            arcpy.AddGlobalIDs_management(cfTable)
+
+        if cfAttributeRules:
+            arcpy.SetProgressorLabel("Importing Contacts and Faults Attribute Rules.")
+            arcpy.ImportAttributeRules_management(cfTable[0], cfAttributeRules)
+
         # Select the DMU table
         dmuTable = arcpy.ListTables("DescriptionOfMapUnits")[0]
-
+ 
         arcpy.AddMessage(dmuTable)
 
         # Add Global ID to DMU
-        if dmuGlobalId:
+        if addGlobalId:
             arcpy.SetProgressorLabel("Adding Global ID to DMU table.")
             arcpy.AddGlobalIDs_management(dmuTable)
 
@@ -185,7 +212,7 @@ class CreateXmlWorkspace(object):
             arcpy.AddField_management(dmuTable, "RelativeAge", "TEXT")
             arcpy.AddField_management(dmuTable, "HexColor", "TEXT")
             
-        if paragraphStyleDomain:
+        if addDomains:
             arcpy.SetProgressorLabel("Creating ParagraphStyle domain for DMU table.")
 
             # Create ParagraphStyle domain
