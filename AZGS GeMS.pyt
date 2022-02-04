@@ -109,7 +109,7 @@ class CreateXmlWorkspace(object):
 
         # Add domain
         addDomains = arcpy.Parameter(
-            displayName="Add domains",
+            displayName="Add Domains",
             name="addDomains",
             datatype="GPBoolean",
             parameterType="Required",
@@ -195,20 +195,57 @@ class CreateXmlWorkspace(object):
 
         # Add CF Domains
         if addDomains:
-            arcpy.SetProgressorLabel("Creating IsConcealed domain for Contacts and Faults.")
 
-            # Create ParagraphStyle domain
-            arcpy.CreateDomain_management(tmpGDB, "IsConcealedDomain", "Type", "TEXT", "CODED")
+            ### IsConcealed Domain ####
+            arcpy.SetProgressorLabel("Creating concealed domain for Contacts and Faults.")
 
-            # ParagraphStyle domain dictionary
+            # Create domain
+            arcpy.CreateDomain_management(tmpGDB, "IsConcealedDomain", "Y/N", "TEXT", "CODED")
+
+            # Domain dictionary
             domDict = {"Y":"Y", "N":"N"}
 
-            #Add dmu types to the domain
+            # Add types to the domain
             for code in domDict:        
                 arcpy.AddCodedValueToDomain_management(tmpGDB, "IsConcealedDomain", code, domDict[code])
 
-            # Constrain ParagraphStyle field to the domain
+            # Constrain IsConcealed field to the domain
             arcpy.AssignDomainToField_management('ContactsAndFaults', "IsConcealed", "IsConcealedDomain")
+
+            ### Confidence Domain ####
+            arcpy.SetProgressorLabel("Creating confidence domain for Contacts and Faults.")
+
+            # Create domain
+            arcpy.CreateDomain_management(tmpGDB, "ConfidenceDomain", "Low, Medium, High", "TEXT", "CODED")
+
+            # Domain dictionary
+            domDict = {"Low":"Low", "Medium":"Medium", "High":"High"}
+
+            # Add types to the domain
+            for code in domDict:        
+                arcpy.AddCodedValueToDomain_management(tmpGDB, "ConfidenceDomain", code, domDict[code])
+
+            # Constrain IdentityConfidence field to the domain
+            arcpy.AssignDomainToField_management('ContactsAndFaults', "IdentityConfidence", "ConfidenceDomain")
+
+            # Constrain ExistenceConfidence field to the domain
+            arcpy.AssignDomainToField_management('ContactsAndFaults', "ExistenceConfidence", "ConfidenceDomain")
+
+            ### LocationConfidenceMeters Domain ####
+            arcpy.SetProgressorLabel("Creating location confidence domain for Contacts and Faults.")
+
+            # Create Domain
+            arcpy.CreateDomain_management(tmpGDB, "LocationConfidenceDomain", "Location Confidence Meters", "FLOAT", "CODED")
+
+            # Domain dictionary
+            domDict = {10:10, 25:25, 50:50, 100:100, 250:250}
+
+            # Add types to the domain
+            for code in domDict:        
+                arcpy.AddCodedValueToDomain_management(tmpGDB, "LocationConfidenceDomain", code, domDict[code])
+
+            # Constrain LocationConfidenceMeters field to the domain
+            arcpy.AssignDomainToField_management('ContactsAndFaults', "LocationConfidenceMeters", "LocationConfidenceDomain")
 
         # Add CF attribute rules
         if cfAttributeRules:
@@ -234,17 +271,17 @@ class CreateXmlWorkspace(object):
             arcpy.SetProgressorLabel("Creating ParagraphStyle domain for DMU table.")
 
             # Create ParagraphStyle domain
-            arcpy.CreateDomain_management(tmpGDB, "ParagraphStyle", "Type of DMU", "TEXT", "CODED")
+            arcpy.CreateDomain_management(tmpGDB, "ParagraphStyleDomain", "Type of DMU", "TEXT", "CODED")
 
             # ParagraphStyle domain dictionary
             domDict = {"Heading":"Heading", "Standard":"Standard"}
 
             #Add dmu types to the domain
             for code in domDict:        
-                arcpy.AddCodedValueToDomain_management(tmpGDB, "ParagraphStyle", code, domDict[code])
+                arcpy.AddCodedValueToDomain_management(tmpGDB, "ParagraphStyleDomain", code, domDict[code])
 
             # Constrain ParagraphStyle field to the domain
-            arcpy.AssignDomainToField_management(dmuTable, "ParagraphStyle", "ParagraphStyle")
+            arcpy.AssignDomainToField_management(dmuTable, "ParagraphStyle", "ParagraphStyleDomain")
 
         if symbologyCsv:
             arcpy.SetProgressorLabel("Creating cfsymbology table.")
