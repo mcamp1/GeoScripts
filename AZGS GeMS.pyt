@@ -6,7 +6,7 @@ from arcpy.arcobjects.arcobjects import Value
 from arcpy.management import ImportXMLWorkspaceDocument
 
 # Prepopulate parameters for easy testing
-prepopulate = True
+prepopulate = False
 baseFolder = r'C:\GeoScripts'
 
 # Input prepopulate paths
@@ -407,7 +407,7 @@ class CreateGeodatabase(object):
             displayName="Versions",
             name="versions",
             datatype="string",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input",
             multiValue=True
         )
