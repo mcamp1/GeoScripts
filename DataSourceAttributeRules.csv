@@ -1,0 +1,5 @@
+﻿NAME,DESCRIPTION,TYPE,SUBTYPE,FIELD,ISEDITABLE,TRIGGERINSERT,TRIGGERDELETE,TRIGGERUPDATE,SCRIPTEXPRESSION,ERRORNUMBER,ERRORMESSAGE,EXCLUDECLIENTEVALUATION,ISENABLED,BATCH,SEVERITY,TAGS,CATEGORY,CHECKPARAMETERS
+Required Fields,Required fields for data sources,CONSTRAINT,,,True,True,False,True,"if($feature.datasources_id==null||$feature.datasources_id==""""){return{""errorMessage"":""datasources_id is required.""};}
+if($feature.source==null||$feature.source==""""){return{""errorMessage"":""source is required.""};}
+
+return true;",100,Required field is missing.,False,True,False,,,,"{""type"":""PropertySet"",""propertySetItems"":[]}"
