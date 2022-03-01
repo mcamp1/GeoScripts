@@ -14,11 +14,15 @@ usgsGdbvalue = r'{}\Input\usgsGems.gdb'.format(baseFolder)
 symbologyCsvvalue = r'{}\Input\cfsymbology.csv'.format(baseFolder)
 cfARvalue = r'{}\Input\ContactsFaultsAttributeRules.csv'.format(baseFolder)
 dmuARvalue = r'{}\Input\DmuAttributeRules.csv'.format(baseFolder)
+
+dsARvalue = r'{}\Input\DataSourceAttributeRules.csv'.format(baseFolder)
+mupARvalue = r'{}\Input\MupAttributeRules.csv'.format(baseFolder)
+
 authFilevalue = r"{}\Input\keycodes".format(baseFolder)
 importXMLvalue = r"{}\Input\WorkspaceTemplate.xml".format(baseFolder)
 
 # Output prepopulate paths
-outPathXmlvalue = r'{}\Output\CF_WorkspaceTemplate.xml'.format(baseFolder)
+outPathXmlvalue = r'{}\Output\WorkspaceTemplate.xml'.format(baseFolder)
 sdeOutputPathvalue = r"{}\Output\\".format(baseFolder)
 
 class Toolbox(object):
@@ -76,6 +80,24 @@ class CreateXmlWorkspace(object):
             direction="Input",
         )
 
+        # Data Sources Attribute Rules
+        dsAttributeRules = arcpy.Parameter(
+            displayName="Data Sources Attribute Rules",
+            name="dsAttributeRules",
+            datatype="DEFile",
+            parameterType="Optional",
+            direction="Input",
+        )
+
+        # Map Unit Polys Attribute Rules
+        mupAttributeRules = arcpy.Parameter(
+            displayName="Map Unit Polys Attribute Rules",
+            name="mupAttributeRules",
+            datatype="DEFile",
+            parameterType="Optional",
+            direction="Input",
+        )
+
         # Output XML workspace document
         outPathXml = arcpy.Parameter(
             displayName="XML Export Location",
@@ -89,6 +111,8 @@ class CreateXmlWorkspace(object):
         symbologyCsv.filter.list = ['csv']
         cfAttributeRules.filter.list = ['csv']
         dmuAttributeRules.filter.list = ['csv']
+        dsAttributeRules.filter.list = ['csv']
+        mupAttributeRules.filter.list = ['csv']
         outPathXml.filter.list = ['xml']
 
         if (prepopulate):
@@ -96,9 +120,11 @@ class CreateXmlWorkspace(object):
             symbologyCsv.value = symbologyCsvvalue
             cfAttributeRules.value = cfARvalue
             dmuAttributeRules.value = dmuARvalue
+            dsAttributeRules.value = dsARvalue
+            mupAttributeRules.value = mupARvalue
             outPathXml.value = outPathXmlvalue
 
-        params = [usgsGdb, symbologyCsv, cfAttributeRules, dmuAttributeRules, outPathXml]
+        params = [usgsGdb, symbologyCsv, cfAttributeRules, dmuAttributeRules, dsAttributeRules, mupAttributeRules, outPathXml]
 
         return params
 
@@ -124,7 +150,9 @@ class CreateXmlWorkspace(object):
         symbologyCsv = parameters[1].valueAsText
         cfAttributeRules = parameters[2].valueAsText
         dmuAttributeRules = parameters[3].valueAsText
-        outPathXml = parameters[4].valueAsText
+        dsAttributeRules = parameters[4].valueAsText
+        mupAttributeRules = parameters[5].valueAsText
+        outPathXml = parameters[6].valueAsText
 
         arcpy.SetProgressor("default")
 
@@ -145,8 +173,6 @@ class CreateXmlWorkspace(object):
 
         # Select the cf table
         cfTable = arcpy.ListFeatureClasses('ContactsAndFaults', feature_dataset = 'GeologicMap')
-
-        arcpy.AddMessage(cfTable)
 
         # Add Global ID to contacts and faults
         arcpy.SetProgressorLabel("Adding Global ID to Contacts and Faults.")
@@ -215,12 +241,16 @@ class CreateXmlWorkspace(object):
         # Select the DMU table
         dmuTable = arcpy.ListTables("DescriptionOfMapUnits")[0]
  
-        arcpy.AddMessage(dmuTable)
+        if dmuAttributeRules:
+            # Add Global ID to DMU
+            arcpy.SetProgressorLabel("Adding Global ID to DMU table.")
+            arcpy.AddGlobalIDs_management(dmuTable)
 
-        # Add Global ID to DMU
-        arcpy.SetProgressorLabel("Adding Global ID to DMU table.")
-        arcpy.AddGlobalIDs_management(dmuTable)
+            # Import Attribute Rules for DMU
+            arcpy.SetProgressorLabel("Importing DMU Attribute Rules.")
+            arcpy.ImportAttributeRules_management("DescriptionOfMapUnits", dmuAttributeRules)
 
+        # Add custom fields to DMU
         arcpy.SetProgressorLabel("Adding custom fields to DMU.")
         arcpy.AddField_management(dmuTable, "RelativeAge", "TEXT")
         arcpy.AddField_management(dmuTable, "HexColor", "TEXT")
@@ -240,13 +270,48 @@ class CreateXmlWorkspace(object):
         # Constrain ParagraphStyle field to the domain
         arcpy.AssignDomainToField_management(dmuTable, "ParagraphStyle", "ParagraphStyleDomain")
 
+        # Add Data Sources Global ID and Rules
+        if dsAttributeRules:
+            # Select the Data Sources tables
+            dsTable = arcpy.ListTables("DataSources")[0]
+
+            # Add Global ID to Data Sources
+            arcpy.SetProgressorLabel("Adding Global ID to Data Sources table.")
+            arcpy.AddGlobalIDs_management(dsTable)
+
+            # Import Attribute Rules for Data Sources
+            arcpy.SetProgressorLabel("Importing Data Sources Attribute Rules.")
+            arcpy.ImportAttributeRules_management("DataSources", dsAttributeRules)
+
+
+
+
+
+
+        # Add MUP Global ID and Rules
+        if mupAttributeRules:
+            # Select the MUP tables
+            mupTable = arcpy.ListFeatureClasses('MapUnitPolys', feature_dataset = 'GeologicMap')
+
+            # Add Global ID to MUP
+            arcpy.SetProgressorLabel("Adding Global ID to Map Unit Polys table.")
+            arcpy.AddGlobalIDs_management(mupTable)
+
+            # Import Attribute Rules for MUP
+            arcpy.SetProgressorLabel("Importing Map Unit Polys Attribute Rules.")
+            arcpy.ImportAttributeRules_management("MapUnitPolys", mupAttributeRules)
+
+
+
+
+
+
+
+
+        # Add contacts and faults symbology table
         if symbologyCsv:
             arcpy.SetProgressorLabel("Creating cfsymbology table.")
             arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "cfsymbology")
-
-        if dmuAttributeRules:
-            arcpy.SetProgressorLabel("Importing DMU Attribute Rules.")
-            arcpy.ImportAttributeRules_management("DescriptionOfMapUnits", dmuAttributeRules)
 
         # Export XML workspace  
         arcpy.SetProgressorLabel("Exporting geodatabase contents.")
@@ -512,13 +577,11 @@ class CreateGeodatabase(object):
 
         # Register datasets as versioned
         for dataset in arcpy.ListDatasets():
-            arcpy.AddMessage(dataset)
             arcpy.SetProgressorLabel("Registering {0} as versioned..".format(dataset))
             arcpy.RegisterAsVersioned_management(dataset)
 
         # Register tables as versioned
         for table in arcpy.ListTables():
-            arcpy.AddMessage(table)
             arcpy.SetProgressorLabel("Registering {0} as versioned..".format(table))
             arcpy.RegisterAsVersioned_management(table)
 
