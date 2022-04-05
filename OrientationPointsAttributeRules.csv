@@ -1,0 +1,9 @@
+﻿NAME,DESCRIPTION,TYPE,SUBTYPE,FIELD,ISEDITABLE,TRIGGERINSERT,TRIGGERDELETE,TRIGGERUPDATE,SCRIPTEXPRESSION,ERRORNUMBER,ERRORMESSAGE,EXCLUDECLIENTEVALUATION,ISENABLED,BATCH,SEVERITY,TAGS,CATEGORY,CHECKPARAMETERS
+Required Fields.,Required fields for orientation points.,CONSTRAINT,,,True,True,False,True,"if($feature.type==null||$feature.type==""""){return{""errorMessage"":""Type is required.""};}
+if($feature.symbol==null||$feature.symbol==""""){return{""errorMessage"":""Symbol is required.""};}
+if($feature.locationconfidencemeters==null||$feature.locationconfidencemeters==""""){return{""errorMessage"":""LocationConfidenceMeters is required.""};}
+if($feature.plotatscale==null||$feature.plotatscale==""""){return{""errorMessage"":""PlotAtScale is required.""};}
+if($feature.locationsourceid==null||$feature.locationsourceid==""""){return{""errorMessage"":""LocationSourceID is required.""};}
+if($feature.orientationsourceid==null||$feature.orientationsourceid==""""){return{""errorMessage"":""OrientationSourceID is required.""};}
+
+return true;",100,Required field is missing.,False,True,False,,,,"{""type"":""PropertySet"",""propertySetItems"":[]}"
