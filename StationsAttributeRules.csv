@@ -1,0 +1,7 @@
+﻿NAME,DESCRIPTION,TYPE,SUBTYPE,FIELD,ISEDITABLE,TRIGGERINSERT,TRIGGERDELETE,TRIGGERUPDATE,SCRIPTEXPRESSION,ERRORNUMBER,ERRORMESSAGE,EXCLUDECLIENTEVALUATION,ISENABLED,BATCH,SEVERITY,TAGS,CATEGORY,CHECKPARAMETERS
+Required Fields,Required fields for stations.,CONSTRAINT,,,True,True,False,True,"if($feature.fieldid==null||$feature.fieldid==""""){return{""errorMessage"":""fieldid is required.""};}
+if($feature.locationconfidencemeters==null||$feature.locationconfidencemeters==""""){return{""errorMessage"":""LocationConfidenceMeters is required.""};}
+if($feature.plotatscale==null||$feature.plotatscale==""""){return{""errorMessage"":""PlotAtScale is required.""};}
+if($feature.datasourceid==null||$feature.datasourceid==""""){return{""errorMessage"":""DataSourceID is required.""};}
+
+return true;",100,Required field is missing.,False,True,False,,,,"{""type"":""PropertySet"",""propertySetItems"":[]}"

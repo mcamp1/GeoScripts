@@ -17,6 +17,7 @@ dmuARvalue = r'{}\Input\DmuAttributeRules.csv'.format(baseFolder)
 
 dsARvalue = r'{}\Input\DataSourceAttributeRules.csv'.format(baseFolder)
 mupARvalue = r'{}\Input\MupAttributeRules.csv'.format(baseFolder)
+stationARvalue = r'{}\Input\StationAttributeRules.csv'.format(baseFolder)
 
 authFilevalue = r"{}\Input\keycodes".format(baseFolder)
 importXMLvalue = r"{}\Input\WorkspaceTemplate.xml".format(baseFolder)
@@ -98,6 +99,15 @@ class CreateXmlWorkspace(object):
             direction="Input",
         )
 
+        # Stations Attribute Rules
+        stationsAttributeRules = arcpy.Parameter(
+            displayName="Stations Attribute Rules",
+            name="stationsAttributeRules",
+            datatype="DEFile",
+            parameterType="Optional",
+            direction="Input",
+        )
+
         # Output XML workspace document
         outPathXml = arcpy.Parameter(
             displayName="XML Export Location",
@@ -113,6 +123,7 @@ class CreateXmlWorkspace(object):
         dmuAttributeRules.filter.list = ['csv']
         dsAttributeRules.filter.list = ['csv']
         mupAttributeRules.filter.list = ['csv']
+        stationsAttributeRules.filter.list = ['csv']
         outPathXml.filter.list = ['xml']
 
         if (prepopulate):
@@ -122,9 +133,10 @@ class CreateXmlWorkspace(object):
             dmuAttributeRules.value = dmuARvalue
             dsAttributeRules.value = dsARvalue
             mupAttributeRules.value = mupARvalue
+            stationsAttributeRules.value = stationARvalue
             outPathXml.value = outPathXmlvalue
 
-        params = [usgsGdb, symbologyCsv, cfAttributeRules, dmuAttributeRules, dsAttributeRules, mupAttributeRules, outPathXml]
+        params = [usgsGdb, symbologyCsv, cfAttributeRules, dmuAttributeRules, dsAttributeRules, mupAttributeRules, stationsAttributeRules, outPathXml]
 
         return params
 
@@ -152,7 +164,8 @@ class CreateXmlWorkspace(object):
         dmuAttributeRules = parameters[3].valueAsText
         dsAttributeRules = parameters[4].valueAsText
         mupAttributeRules = parameters[5].valueAsText
-        outPathXml = parameters[6].valueAsText
+        stationsAttributeRules = parameters[6].valueAsText
+        outPathXml = parameters[7].valueAsText
 
         arcpy.SetProgressor("default")
 
@@ -283,11 +296,6 @@ class CreateXmlWorkspace(object):
             arcpy.SetProgressorLabel("Importing Data Sources Attribute Rules.")
             arcpy.ImportAttributeRules_management("DataSources", dsAttributeRules)
 
-
-
-
-
-
         # Add MUP Global ID and Rules
         if mupAttributeRules:
             # Select the MUP tables
@@ -301,12 +309,18 @@ class CreateXmlWorkspace(object):
             arcpy.SetProgressorLabel("Importing Map Unit Polys Attribute Rules.")
             arcpy.ImportAttributeRules_management("MapUnitPolys", mupAttributeRules)
 
+        # Add Station Global ID and Rules
+        if stationsAttributeRules:
+            # Select the Station tables
+            stationTable = arcpy.ListFeatureClasses('Stations', feature_dataset = 'GeologicMap')
 
+            # Add Global ID to MUP
+            arcpy.SetProgressorLabel("Adding Global ID to Stations table.")
+            arcpy.AddGlobalIDs_management(stationTable)
 
-
-
-
-
+            # Import Attribute Rules for MUP
+            arcpy.SetProgressorLabel("Importing Stations Attribute Rules.")
+            arcpy.ImportAttributeRules_management("Stations", stationsAttributeRules)
 
         # Add contacts and faults symbology table
         if symbologyCsv:
