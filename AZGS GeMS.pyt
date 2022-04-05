@@ -346,7 +346,7 @@ class CreateXmlWorkspace(object):
 
             # Import Attribute Rules
             arcpy.SetProgressorLabel("Importing OrientationPoints Attribute Rules.")
-            arcpy.ImportAttributeRules_management("OrientationPoints", stationsAttributeRules)
+            arcpy.ImportAttributeRules_management("OrientationPoints", opAttributeRules)
 
         # Add contacts and faults symbology table
         if symbologyCsv:
