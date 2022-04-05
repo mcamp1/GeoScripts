@@ -677,7 +677,7 @@ class ImportGeodatabase(object):
         # Check if there was an active map
         if not activeMap:
             arcpy.ResetProgressor()
-            arcpy.AddError("Map not found.")
+            arcpy.AddError("Map tab must be active to import GEMS geodatabase.")
             return
 
         # Set SDE filea s the default gdb
