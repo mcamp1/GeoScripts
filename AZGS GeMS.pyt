@@ -55,7 +55,7 @@ class CreateXmlWorkspace(object):
 
         # CF Symbology CSV
         symbologyCsv = arcpy.Parameter(
-            displayName="CF Symbology CSV",
+            displayName="Symbology CSV",
             name="symbologyCsv",
             datatype="DEFile",
             parameterType="Optional",
@@ -64,7 +64,7 @@ class CreateXmlWorkspace(object):
 
         # CF Attribute Rules
         cfAttributeRules = arcpy.Parameter(
-            displayName="CF Attribute Rules",
+            displayName="ContactsAndFaults Attribute Rules",
             name="cfAttributeRules",
             datatype="DEFile",
             parameterType="Optional",
@@ -73,7 +73,7 @@ class CreateXmlWorkspace(object):
 
         # DMU Attribute Rules
         dmuAttributeRules = arcpy.Parameter(
-            displayName="DMU Attribute Rules",
+            displayName="DescriptionOfMapUnits Attribute Rules",
             name="dmuAttributeRules",
             datatype="DEFile",
             parameterType="Optional",
@@ -82,7 +82,7 @@ class CreateXmlWorkspace(object):
 
         # Data Sources Attribute Rules
         dsAttributeRules = arcpy.Parameter(
-            displayName="Data Sources Attribute Rules",
+            displayName="DataSources Attribute Rules",
             name="dsAttributeRules",
             datatype="DEFile",
             parameterType="Optional",
@@ -91,7 +91,7 @@ class CreateXmlWorkspace(object):
 
         # Map Unit Polys Attribute Rules
         mupAttributeRules = arcpy.Parameter(
-            displayName="Map Unit Polys Attribute Rules",
+            displayName="MapUnitPolys Attribute Rules",
             name="mupAttributeRules",
             datatype="DEFile",
             parameterType="Optional",
