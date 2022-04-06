@@ -350,7 +350,7 @@ class CreateXmlWorkspace(object):
         # Add symbology table
         if symbologyCsv:
             arcpy.SetProgressorLabel("Creating symbology table.")
-            arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "symbology")
+            arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "Symbology")
 
         # Export XML workspace  
         arcpy.SetProgressorLabel("Exporting geodatabase contents.")
