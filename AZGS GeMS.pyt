@@ -11,7 +11,7 @@ baseFolder = r'C:\GeoScripts'
 
 # Input prepopulate paths
 usgsGdbvalue = r'{}\Input\usgsGems.gdb'.format(baseFolder)
-symbologyCsvvalue = r'{}\Input\cfsymbology.csv'.format(baseFolder)
+symbologyCsvvalue = r'{}\Input\symbology.xlsx\Sheet1$'.format(baseFolder)
 cfARvalue = r'{}\Input\ContactsFaultsAttributeRules.csv'.format(baseFolder)
 dmuARvalue = r'{}\Input\DmuAttributeRules.csv'.format(baseFolder)
 
@@ -55,11 +55,11 @@ class CreateXmlWorkspace(object):
             direction="Input",
         )
 
-        # CF Symbology CSV
+        # Symbology CSV
         symbologyCsv = arcpy.Parameter(
             displayName="Symbology CSV",
             name="symbologyCsv",
-            datatype="DEFile",
+            datatype="GPTableView",
             parameterType="Optional",
             direction="Input",
         )
@@ -128,7 +128,6 @@ class CreateXmlWorkspace(object):
         )
 
         usgsGdb.filter.list = ["LocalDatabase"]
-        symbologyCsv.filter.list = ['csv']
         cfAttributeRules.filter.list = ['csv']
         dmuAttributeRules.filter.list = ['csv']
         dsAttributeRules.filter.list = ['csv']
@@ -348,10 +347,10 @@ class CreateXmlWorkspace(object):
             arcpy.SetProgressorLabel("Importing OrientationPoints Attribute Rules.")
             arcpy.ImportAttributeRules_management("OrientationPoints", opAttributeRules)
 
-        # Add contacts and faults symbology table
+        # Add symbology table
         if symbologyCsv:
-            arcpy.SetProgressorLabel("Creating cfsymbology table.")
-            arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "cfsymbology")
+            arcpy.SetProgressorLabel("Creating symbology table.")
+            arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "symbology")
 
         # Export XML workspace  
         arcpy.SetProgressorLabel("Exporting geodatabase contents.")
