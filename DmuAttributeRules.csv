@@ -3,7 +3,7 @@ Required Fields,Required fields for dmu.,CONSTRAINT,,,True,True,False,True,"if (
 {
  if($feature.name==null||$feature.name==""""){return{""errorMessage"":""name is required.""};}
  if($feature.description==null||$feature.description==""""){return{""errorMessage"":""description is required.""};}
- if($feature.datasourceid==null||$feature.datasourceid==""""){return{""errorMessage"":""DataSourceID is required.""};}
+ if($feature.descriptionsourceid==null||$feature.descriptionsourceid==""""){return{""errorMessage"":""DescriptionSourceID is required.""};}
 } 
 else
 {
@@ -14,7 +14,7 @@ else
  if($feature.areafillrgb==null||$feature.areafillrgb==""""){return{""errorMessage"":""areafillrgb is required.""};}
  if($feature.geomaterial==null||$feature.geomaterial==""""){return{""errorMessage"":""geomaterial is required.""};}
  if($feature.geomaterialconfidence==null||$feature.geomaterialconfidence==""""){return{""errorMessage"":""geomaterialconfidence is required.""};}
- if($feature.datasourceid==null||$feature.datasourceid==""""){return{""errorMessage"":""DataSourceID is required.""};}
+ if($feature.descriptionsourceid==null||$feature.descriptionsourceid==""""){return{""errorMessage"":""DescriptionSourceID is required.""};}
 }
 return true;",100,Required field is missing.,False,True,False,,,0,"{""type"":""PropertySet"",""propertySetItems"":[]}"
 Validate Hierarchy Key,Validate Hierarchy Key,CONSTRAINT,,,True,True,False,True,"// Don't worry about empty values for now
