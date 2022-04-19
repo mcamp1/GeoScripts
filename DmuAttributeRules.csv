@@ -2,7 +2,6 @@
 Required Fields,Required fields for dmu.,CONSTRAINT,,,True,True,False,True,"if ($feature.paragraphstyle == 'Heading')
 {
  if($feature.name==null||$feature.name==""""){return{""errorMessage"":""name is required.""};}
- if($feature.description==null||$feature.description==""""){return{""errorMessage"":""description is required.""};}
  if($feature.descriptionsourceid==null||$feature.descriptionsourceid==""""){return{""errorMessage"":""DescriptionSourceID is required.""};}
 } 
 else
