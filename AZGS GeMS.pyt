@@ -11,7 +11,7 @@ baseFolder = r'C:\GeoScripts'
 
 # Input prepopulate paths
 usgsGdbvalue = r'{}\Input\USGS_gems.gdb'.format(baseFolder)
-symbologyCsvvalue = r'{}\Input\Symbology.xlsx\Sheet1$'.format(baseFolder)
+symbologyCsvvalue = r'{}\Input\Symbology.xlsx\Symbology$'.format(baseFolder)
 cfARvalue = r'{}\Input\ContactsFaultsAttributeRules.csv'.format(baseFolder)
 dmuARvalue = r'{}\Input\DmuAttributeRules.csv'.format(baseFolder)
 
