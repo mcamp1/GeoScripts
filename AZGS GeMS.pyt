@@ -1,31 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import arcpy
-import random
 from arcpy.arcobjects.arcobjects import Value
 from arcpy.management import ImportXMLWorkspaceDocument
-
-# Prepopulate parameters for easy testing
-prepopulate = True
-baseFolder = r'C:\GeoScripts'
-
-# Input prepopulate paths
-usgsGdbvalue = r'{}\Input\USGS_gems.gdb'.format(baseFolder)
-symbologyCsvvalue = r'{}\Input\Symbology.xlsx\Symbology$'.format(baseFolder)
-cfARvalue = r'{}\Input\ContactsFaultsAttributeRules.csv'.format(baseFolder)
-dmuARvalue = r'{}\Input\DmuAttributeRules.csv'.format(baseFolder)
-
-dsARvalue = r'{}\Input\DataSourceAttributeRules.csv'.format(baseFolder)
-mupARvalue = r'{}\Input\MupAttributeRules.csv'.format(baseFolder)
-stationARvalue = r'{}\Input\StationsAttributeRules.csv'.format(baseFolder)
-opARvalue = r'{}\Input\OrientationPointsAttributeRules.csv'.format(baseFolder)
-
-authFilevalue = r"{}\Input\keycodes".format(baseFolder)
-importXMLvalue = r"{}\Input\WorkspaceTemplate.xml".format(baseFolder)
-
-# Output prepopulate paths
-outPathXmlvalue = r'{}\Output\WorkspaceTemplate.xml'.format(baseFolder)
-sdeOutputPathvalue = r"{}\Output\\".format(baseFolder)
 
 class Toolbox(object):
     def __init__(self):
@@ -135,17 +112,6 @@ class CreateXmlWorkspace(object):
         stationsAttributeRules.filter.list = ['csv']
         opAttributeRules.filter.list = ['csv']
         outPathXml.filter.list = ['xml']
-
-        if (prepopulate):
-            usgsGdb.value = usgsGdbvalue 
-            symbologyCsv.value = symbologyCsvvalue
-            cfAttributeRules.value = cfARvalue
-            dmuAttributeRules.value = dmuARvalue
-            dsAttributeRules.value = dsARvalue
-            mupAttributeRules.value = mupARvalue
-            stationsAttributeRules.value = stationARvalue
-            opAttributeRules.value = opARvalue
-            outPathXml.value = outPathXmlvalue
 
         params = [usgsGdb, symbologyCsv, cfAttributeRules, dmuAttributeRules, dsAttributeRules, mupAttributeRules, stationsAttributeRules, opAttributeRules, outPathXml]
 
@@ -476,17 +442,6 @@ class CreateGeodatabase(object):
         parameters = [dbPlatform, instance, database, dbAdmin, dbAdminPwd,
          gdbadminpwd, authFile, importXML, sdeExportFolder, versions]
 
-        if (prepopulate):
-            parameters[1].value = "localhost"
-            parameters[2].value = "database{}".format(random.randint(0,999))
-            parameters[3].value = "postgres"
-            parameters[4].value = "Password12345"
-            parameters[5].value = "password"
-            parameters[6].value = authFilevalue
-            parameters[7].value = importXMLvalue
-            parameters[8].value = sdeOutputPathvalue
-            parameters[9].values = ['LB', 'AZ', 'MC'] 
-
         return parameters
         
 
@@ -495,20 +450,6 @@ class CreateGeodatabase(object):
         return True
 
     def updateParameters(self, parameters):
-
-        # prepopulate values
-        if (prepopulate and parameters[0].valueAsText == 'SQL Server'):
-            parameters[1].value = "localhost\SQLEXPRESS"
-            parameters[3].value = ""      
-            parameters[4].value = "" 
-            parameters[5].value = "Password12345" 
-            
-        elif (prepopulate and parameters[0].valueAsText == 'PostgreSQL'):
-            parameters[1].value = "localhost"
-            parameters[3].value = "postgres"      
-            parameters[4].value = "Password12345" 
-            parameters[5].value = "password" 
-
         return
 
 
