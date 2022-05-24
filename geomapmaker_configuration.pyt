@@ -23,9 +23,9 @@ class CreateXmlWorkspace(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
 
-        # USGS GeMS Geodatabase
+        # USGS GeMS Geodatabase File
         usgsGdb = arcpy.Parameter(
-            displayName="USGS GeMS Geodatabase",
+            displayName="USGS GeMS Geodatabase File",
             name="usgsGdb",
             datatype="DEWorkspace",
             parameterType="Required",
@@ -41,63 +41,9 @@ class CreateXmlWorkspace(object):
             direction="Input",
         )
 
-        # CF Attribute Rules
-        cfAttributeRules = arcpy.Parameter(
-            displayName="ContactsAndFaults Attribute Rules",
-            name="cfAttributeRules",
-            datatype="DEFile",
-            parameterType="Optional",
-            direction="Input",
-        )
-
-        # DMU Attribute Rules
-        dmuAttributeRules = arcpy.Parameter(
-            displayName="DescriptionOfMapUnits Attribute Rules",
-            name="dmuAttributeRules",
-            datatype="DEFile",
-            parameterType="Optional",
-            direction="Input",
-        )
-
-        # Data Sources Attribute Rules
-        dsAttributeRules = arcpy.Parameter(
-            displayName="DataSources Attribute Rules",
-            name="dsAttributeRules",
-            datatype="DEFile",
-            parameterType="Optional",
-            direction="Input",
-        )
-
-        # Map Unit Polys Attribute Rules
-        mupAttributeRules = arcpy.Parameter(
-            displayName="MapUnitPolys Attribute Rules",
-            name="mupAttributeRules",
-            datatype="DEFile",
-            parameterType="Optional",
-            direction="Input",
-        )
-
-        # Stations Attribute Rules
-        stationsAttributeRules = arcpy.Parameter(
-            displayName="Stations Attribute Rules",
-            name="stationsAttributeRules",
-            datatype="DEFile",
-            parameterType="Optional",
-            direction="Input",
-        )
-
-        # OrientationPoints Attribute Rules
-        opAttributeRules = arcpy.Parameter(
-            displayName="OrientationPoints Attribute Rules",
-            name="opAttributeRules",
-            datatype="DEFile",
-            parameterType="Optional",
-            direction="Input",
-        )
-
         # Output XML workspace document
         outPathXml = arcpy.Parameter(
-            displayName="XML Export Location",
+            displayName="Filepath for XML export ",
             name="outPathXml",
             datatype="DEFile",
             parameterType="Required",
@@ -105,15 +51,9 @@ class CreateXmlWorkspace(object):
         )
 
         usgsGdb.filter.list = ["LocalDatabase"]
-        cfAttributeRules.filter.list = ['csv']
-        dmuAttributeRules.filter.list = ['csv']
-        dsAttributeRules.filter.list = ['csv']
-        mupAttributeRules.filter.list = ['csv']
-        stationsAttributeRules.filter.list = ['csv']
-        opAttributeRules.filter.list = ['csv']
         outPathXml.filter.list = ['xml']
 
-        params = [usgsGdb, symbologyCsv, cfAttributeRules, dmuAttributeRules, dsAttributeRules, mupAttributeRules, stationsAttributeRules, opAttributeRules, outPathXml]
+        params = [usgsGdb, symbologyCsv, outPathXml]
 
         return params
 
@@ -137,13 +77,7 @@ class CreateXmlWorkspace(object):
 
         usgsGdb = parameters[0].valueAsText
         symbologyCsv = parameters[1].valueAsText
-        cfAttributeRules = parameters[2].valueAsText
-        dmuAttributeRules = parameters[3].valueAsText
-        dsAttributeRules = parameters[4].valueAsText
-        mupAttributeRules = parameters[5].valueAsText
-        stationsAttributeRules = parameters[6].valueAsText
-        opAttributeRules = parameters[7].valueAsText
-        outPathXml = parameters[8].valueAsText
+        outPathXml = parameters[2].valueAsText
 
         arcpy.SetProgressor("default")
 
@@ -162,16 +96,16 @@ class CreateXmlWorkspace(object):
         
         ####### Make updates to the temp gdb #######
 
-        # Select the cf table
+        ###################
+        # ContactsAndFaults
+        ###################
+
+        # Select table
         cfTable = arcpy.ListFeatureClasses('ContactsAndFaults', feature_dataset = 'GeologicMap')
 
-        # Add Global ID to contacts and faults
+        # Add Global ID
         arcpy.SetProgressorLabel("Adding Global ID to Contacts and Faults.")
         arcpy.AddGlobalIDs_management(cfTable)
-
-        ##################
-        # Add CF Domains #
-        ##################
 
         ### IsConcealed Domain ####
         arcpy.SetProgressorLabel("Creating concealed domain for Contacts and Faults.")
@@ -189,131 +123,60 @@ class CreateXmlWorkspace(object):
         # Constrain IsConcealed field to the domain
         arcpy.AssignDomainToField_management('ContactsAndFaults', "IsConcealed", "IsConcealedDomain")
 
-        ### Confidence Domain ####
-        arcpy.SetProgressorLabel("Creating confidence domain for Contacts and Faults.")
+        #######################
+        # DescriptionOfMapUnits
+        #######################
 
-        # Create domain
-        arcpy.CreateDomain_management(tmpGDB, "ConfidenceDomain", "Low, Medium, High", "TEXT", "CODED")
-
-        # Domain dictionary
-        domDict = {"Low":"Low", "Medium":"Medium", "High":"High"}
-
-        # Add types to the domain
-        for code in domDict:        
-            arcpy.AddCodedValueToDomain_management(tmpGDB, "ConfidenceDomain", code, domDict[code])
-
-        # Constrain IdentityConfidence field to the domain
-        arcpy.AssignDomainToField_management('ContactsAndFaults', "IdentityConfidence", "ConfidenceDomain")
-
-        # Constrain ExistenceConfidence field to the domain
-        arcpy.AssignDomainToField_management('ContactsAndFaults', "ExistenceConfidence", "ConfidenceDomain")
-
-        ### LocationConfidenceMeters Domain ####
-        arcpy.SetProgressorLabel("Creating location confidence domain for Contacts and Faults.")
-
-        # Create Domain
-        arcpy.CreateDomain_management(tmpGDB, "LocationConfidenceDomain", "Location Confidence Meters", "FLOAT", "CODED")
-
-        # Domain dictionary
-        domDict = {10:10, 25:25, 50:50, 100:100, 250:250}
-
-        # Add types to the domain
-        for code in domDict:        
-            arcpy.AddCodedValueToDomain_management(tmpGDB, "LocationConfidenceDomain", code, domDict[code])
-
-        # Constrain LocationConfidenceMeters field to the domain
-        arcpy.AssignDomainToField_management('ContactsAndFaults', "LocationConfidenceMeters", "LocationConfidenceDomain")
-
-        # Add CF attribute rules
-        if cfAttributeRules:
-            arcpy.SetProgressorLabel("Importing Contacts and Faults Attribute Rules.")
-            arcpy.ImportAttributeRules_management(cfTable[0], cfAttributeRules)
-
-        # Select the DMU table
+        # Select table
         dmuTable = arcpy.ListTables("DescriptionOfMapUnits")[0]
  
-        if dmuAttributeRules:
-            # Add Global ID to DMU
-            arcpy.SetProgressorLabel("Adding Global ID to DMU table.")
-            arcpy.AddGlobalIDs_management(dmuTable)
-
-            # Import Attribute Rules for DMU
-            arcpy.SetProgressorLabel("Importing DMU Attribute Rules.")
-            arcpy.ImportAttributeRules_management("DescriptionOfMapUnits", dmuAttributeRules)
+        # Add Global ID
+        arcpy.SetProgressorLabel("Adding Global ID to DMU table.")
+        arcpy.AddGlobalIDs_management(dmuTable)
 
         # Add custom fields to DMU
         arcpy.SetProgressorLabel("Adding custom fields to DMU.")
         arcpy.AddField_management(dmuTable, "RelativeAge", "TEXT")
         arcpy.AddField_management(dmuTable, "HexColor", "TEXT")
             
-        arcpy.SetProgressorLabel("Creating ParagraphStyle domain for DMU table.")
+        ##############
+        # MapUnitPolys 
+        ##############
 
-        # Create ParagraphStyle domain
-        arcpy.CreateDomain_management(tmpGDB, "ParagraphStyleDomain", "Type of DMU", "TEXT", "CODED")
+        # Select feature
+        mupTable = arcpy.ListFeatureClasses('MapUnitPolys', feature_dataset = 'GeologicMap')
 
-        # ParagraphStyle domain dictionary
-        domDict = {"Heading":"Heading", "Standard":"Standard"}
+        # Add Global ID
+        arcpy.SetProgressorLabel("Adding Global ID to Map Unit Polys table.")
+        arcpy.AddGlobalIDs_management(mupTable)
 
-        # Add dmu types to the domain
-        for code in domDict:        
-            arcpy.AddCodedValueToDomain_management(tmpGDB, "ParagraphStyleDomain", code, domDict[code])
+        ##########
+        # Stations 
+        ##########
 
-        # Constrain ParagraphStyle field to the domain
-        arcpy.AssignDomainToField_management(dmuTable, "ParagraphStyle", "ParagraphStyleDomain")
+        # Select feature
+        stationTable = arcpy.ListFeatureClasses('Stations', feature_dataset = 'GeologicMap')
 
-        # Add Data Sources Global ID and Rules
-        if dsAttributeRules:
-            # Select the Data Sources tables
-            dsTable = arcpy.ListTables("DataSources")[0]
+        # Add Global ID
+        arcpy.SetProgressorLabel("Adding Global ID to Stations table.")
+        arcpy.AddGlobalIDs_management(stationTable)
 
-            # Add Global ID to Data Sources
-            arcpy.SetProgressorLabel("Adding Global ID to Data Sources table.")
-            arcpy.AddGlobalIDs_management(dsTable)
+        ###################
+        # OrientationPoints
+        ###################
 
-            # Import Attribute Rules for Data Sources
-            arcpy.SetProgressorLabel("Importing Data Sources Attribute Rules.")
-            arcpy.ImportAttributeRules_management("DataSources", dsAttributeRules)
+        # Select feature
+        opTable = arcpy.ListFeatureClasses('OrientationPoints', feature_dataset = 'GeologicMap')
 
-        # Add MUP Global ID and Rules
-        if mupAttributeRules:
-            # Select the tables
-            mupTable = arcpy.ListFeatureClasses('MapUnitPolys', feature_dataset = 'GeologicMap')
+        # Add Global ID
+        arcpy.SetProgressorLabel("Adding Global ID to OrientationPoints table.")
+        arcpy.AddGlobalIDs_management(opTable)
 
-            # Add Global ID
-            arcpy.SetProgressorLabel("Adding Global ID to Map Unit Polys table.")
-            arcpy.AddGlobalIDs_management(mupTable)
+        ###########
+        # Symbology
+        ###########
 
-            # Import Attribute Rules
-            arcpy.SetProgressorLabel("Importing Map Unit Polys Attribute Rules.")
-            arcpy.ImportAttributeRules_management("MapUnitPolys", mupAttributeRules)
-
-        # Add Station Global ID and Rules
-        if stationsAttributeRules:
-            # Select the tables
-            stationTable = arcpy.ListFeatureClasses('Stations', feature_dataset = 'GeologicMap')
-
-            # Add Global ID
-            arcpy.SetProgressorLabel("Adding Global ID to Stations table.")
-            arcpy.AddGlobalIDs_management(stationTable)
-
-            # Import Attribute Rules
-            arcpy.SetProgressorLabel("Importing Stations Attribute Rules.")
-            arcpy.ImportAttributeRules_management("Stations", stationsAttributeRules)
-
-        # Add OrientationPoints Global ID and Rules
-        if opAttributeRules:
-            # Select the tables
-            opTable = arcpy.ListFeatureClasses('OrientationPoints', feature_dataset = 'GeologicMap')
-
-            # Add Global ID
-            arcpy.SetProgressorLabel("Adding Global ID to OrientationPoints table.")
-            arcpy.AddGlobalIDs_management(opTable)
-
-            # Import Attribute Rules
-            arcpy.SetProgressorLabel("Importing OrientationPoints Attribute Rules.")
-            arcpy.ImportAttributeRules_management("OrientationPoints", opAttributeRules)
-
-        # Add symbology table
+        # Add table
         if symbologyCsv:
             arcpy.SetProgressorLabel("Creating symbology table.")
             arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "Symbology")

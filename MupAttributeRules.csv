@@ -1,6 +1,0 @@
-﻿NAME,DESCRIPTION,TYPE,SUBTYPE,FIELD,ISEDITABLE,TRIGGERINSERT,TRIGGERDELETE,TRIGGERUPDATE,SCRIPTEXPRESSION,ERRORNUMBER,ERRORMESSAGE,EXCLUDECLIENTEVALUATION,ISENABLED,BATCH,SEVERITY,TAGS,CATEGORY,CHECKPARAMETERS
-Required Fields,Required fields for map unit polys.,CONSTRAINT,,,True,True,False,True,"if($feature.mapunit==null||$feature.mapunit==""""){return{""errorMessage"":""mapunit is required.""};}
-if($feature.identityconfidence==null||$feature.identityconfidence==""""){return{""errorMessage"":""identityconfidence is required.""};}
-if($feature.datasourceid==null||$feature.datasourceid==""""){return{""errorMessage"":""datasourceid is required.""};}
-
-return true;",100,Required field is missing.,False,True,False,,,,"{""type"":""PropertySet"",""propertySetItems"":[]}"
