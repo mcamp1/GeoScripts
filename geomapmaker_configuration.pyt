@@ -176,7 +176,7 @@ class CreateXmlWorkspace(object):
         # Symbology
         ###########
 
-        # Add table
+        # Add symbology table
         if symbologyCsv:
             arcpy.SetProgressorLabel("Creating symbology table.")
             arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "Symbology")
