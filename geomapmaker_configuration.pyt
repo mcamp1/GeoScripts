@@ -32,10 +32,19 @@ class CreateXmlWorkspace(object):
             direction="Input",
         )
 
-        # Symbology CSV
-        symbologyCsv = arcpy.Parameter(
-            displayName="Symbology CSV",
-            name="symbologyCsv",
+        # Symbology
+        symbologyTable = arcpy.Parameter(
+            displayName="Symbology",
+            name="symbologyTable",
+            datatype="GPTableView",
+            parameterType="Optional",
+            direction="Input",
+        )
+
+        # Predefined Terms
+        predefinedTermss = arcpy.Parameter(
+            displayName="Predefined Terms",
+            name="predefinedTermss",
             datatype="GPTableView",
             parameterType="Optional",
             direction="Input",
@@ -53,7 +62,7 @@ class CreateXmlWorkspace(object):
         usgsGdb.filter.list = ["LocalDatabase"]
         outPathXml.filter.list = ['xml']
 
-        params = [usgsGdb, symbologyCsv, outPathXml]
+        params = [usgsGdb, symbologyTable, predefinedTermss, outPathXml]
 
         return params
 
@@ -76,8 +85,9 @@ class CreateXmlWorkspace(object):
         """The source code of the tool."""
 
         usgsGdb = parameters[0].valueAsText
-        symbologyCsv = parameters[1].valueAsText
-        outPathXml = parameters[2].valueAsText
+        symbologyTable = parameters[1].valueAsText
+        predefinedTermss = parameters[2].valueAsText
+        outPathXml = parameters[3].valueAsText
 
         arcpy.SetProgressor("default")
 
@@ -177,9 +187,14 @@ class CreateXmlWorkspace(object):
         ###########
 
         # Add symbology table
-        if symbologyCsv:
+        if symbologyTable:
             arcpy.SetProgressorLabel("Creating symbology table.")
-            arcpy.TableToTable_conversion(symbologyCsv, tmpGDB, "Symbology")
+            arcpy.TableToTable_conversion(symbologyTable, tmpGDB, "Symbology")
+
+        # Add predefined table
+        if predefinedTermss:
+            arcpy.SetProgressorLabel("Creating Predefined Terms table.")
+            arcpy.TableToTable_conversion(predefinedTermss, tmpGDB, "PredefinedTerms")
 
         # Export XML workspace  
         arcpy.SetProgressorLabel("Exporting geodatabase contents.")
